@@ -43,6 +43,11 @@ display them, and are NOT sublicensed to you.
       Non-commercial use only. If you reuse this data, you must obtain your own
       TMDB API key and comply with those terms yourself.
 
+  Note: the AniList-to-TMDB mapping used at build time comes from
+  Fribb/anime-lists, derived from manami-project/anime-offline-database
+  (ODbL 1.0 / DbCL 1.0). It is used for lookup only; no identifiers from it are
+  written into data/streaming.json.
+
   assets/tmdb.svg
       Trademark of TMDB, included for the attribution required by their terms.
       Not licensed for any other use.

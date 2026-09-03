@@ -56,7 +56,7 @@ the published page.**
 flowchart LR
     A[GitHub Actions<br/>daily / weekly] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
     B --> C[TMDB API<br/>watch/providers region=JP]
-    C --> D[data/streaming.json<br/>6,152 titles / 235 KB]
+    C --> D[data/streaming.json<br/>6,152 titles / 106 KB]
     D --> E[anime.html<br/>visitor's browser]
 ```
 
@@ -147,10 +147,17 @@ device.
   competing list/tracker services. This app links back to each title's AniList page and
   adds Japan-specific information (streaming availability, broadcast-day handling) that
   AniList does not provide.
-- **[Fribb/anime-lists](https://github.com/Fribb/anime-lists)**, used for ID mapping,
-  currently publishes **no license**. The mapping is consumed at build time only, and the
-  generated file stores nothing more than ID pairs, but be aware of this if you fork the
-  project.
+- **ID mapping and ODbL.** [Fribb/anime-lists](https://github.com/Fribb/anime-lists) states
+  no license of its own, but it is derived from
+  [anime-offline-database](https://github.com/manami-project/anime-offline-database), which
+  is published under **ODbL 1.0 / DbCL 1.0**. ODbL requires derivative databases to be
+  shared under ODbL, which would conflict with TMDB's ban on sublicensing its content. To
+  avoid that conflict, **the mapping is used only during the build and no TMDB identifiers
+  are written to `data/streaming.json`** — the published file contains nothing but AniList
+  IDs and service names.
+- **Upstream maintenance.** anime-offline-database has been archived, and Fribb/anime-lists
+  is [looking for a new maintainer](https://github.com/Fribb/anime-lists/issues/30).
+  Coverage for newly added titles may stop improving.
 - Cover images are served from AniList's CDN and remain the property of their rights
   holders.
 
@@ -159,7 +166,7 @@ device.
 - Titles, artwork, schedules: [AniList](https://anilist.co)
 - Synopses: [Japanese Wikipedia](https://ja.wikipedia.org/), CC BY-SA
 - Streaming availability: [![TMDB](assets/tmdb.svg)](https://www.themoviedb.org/) / JustWatch
-- ID mapping: [Fribb/anime-lists](https://github.com/Fribb/anime-lists)
+- ID mapping: [Fribb/anime-lists](https://github.com/Fribb/anime-lists) ← [anime-offline-database](https://github.com/manami-project/anime-offline-database) ([ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) / DbCL 1.0)
 
 > This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise
 > approved by TMDB.

@@ -47,7 +47,7 @@
 flowchart LR
     A[GitHub Actions<br/>日次 / 週次] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
     B --> C[TMDB API<br/>watch/providers region=JP]
-    C --> D[data/streaming.json<br/>6,152作品 / 235KB]
+    C --> D[data/streaming.json<br/>6,152作品 / 106KB]
     D --> E[anime.html<br/>閲覧者のブラウザ]
 ```
 
@@ -124,7 +124,8 @@ node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 
 - **非公式**。本プロジェクトは AniList・TMDB と提携関係になく、これらの承認を受けたものでもありません。
 - **AniList** はAPIの非営利利用を認めており、競合するリスト／トラッカーサービスとしての利用を制限しています。本アプリは各作品からAniListのページへリンクを張り、AniListが持たない日本国内の情報（配信状況、放送日の扱い）を加える位置づけです。
-- ID対応に使っている **[Fribb/anime-lists](https://github.com/Fribb/anime-lists)** は現時点で**ライセンスが未設定**です。ビルド時にのみ参照し、生成物にはID対応以上の情報を含めていませんが、フォークする場合は留意してください。
+- **ID対応表とODbL**。[Fribb/anime-lists](https://github.com/Fribb/anime-lists) 自体はライセンス未設定ですが、派生元の [anime-offline-database](https://github.com/manami-project/anime-offline-database) は **ODbL 1.0 / DbCL 1.0** で公開されています。ODbLは派生データベースの同一ライセンス公開を求めており、これはTMDBの再許諾禁止と衝突します。そのため**対応表はビルド中の照合にのみ使い、`data/streaming.json` にTMDBのIDを一切書き出していません**。公開しているのはAniList IDとサービス名だけです。
+- **上流の維持状況**。anime-offline-database はアーカイブ済みで、Fribb/anime-lists は[引き継ぎ手を募集中](https://github.com/Fribb/anime-lists/issues/30)です。新規作品のカバー率は今後伸びなくなる可能性があります。
 - 表紙画像は AniList のCDNから配信されており、権利は各権利者に帰属します。
 
 ## クレジット
@@ -132,7 +133,7 @@ node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 - 作品情報・画像: [AniList](https://anilist.co)
 - あらすじ: [ウィキペディア日本語版](https://ja.wikipedia.org/)（CC BY-SA）
 - 配信情報: [![TMDB](assets/tmdb.svg)](https://www.themoviedb.org/) / JustWatch
-- ID対応表: [Fribb/anime-lists](https://github.com/Fribb/anime-lists)
+- ID対応表: [Fribb/anime-lists](https://github.com/Fribb/anime-lists) ← [anime-offline-database](https://github.com/manami-project/anime-offline-database)（[ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) / DbCL 1.0）
 
 > This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
 

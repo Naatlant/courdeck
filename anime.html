@@ -186,7 +186,9 @@
     作品情報: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> ／
     あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>） ／
     国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a>
-    ・JustWatch（1日1回更新）<br>
+    ・JustWatch（1日1回更新） ／
+    ID対応: <a href="https://github.com/Fribb/anime-lists" target="_blank" rel="noopener">Fribb/anime-lists</a>
+    ←<a href="https://github.com/manami-project/anime-offline-database" target="_blank" rel="noopener">anime-offline-database</a>（<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a>）<br>
     <span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span><br>
     本アプリは AniList・TMDB とは無関係の非公式・非営利プロジェクトです。利用者の情報は収集せず、お気に入りや設定はお使いの端末内にのみ保存されます。</p>
 
@@ -330,27 +332,26 @@ function loadStreaming(){
     })
     .catch(function(){ /* 取得できなければ配信情報は出さない */ });
 }
+/* 配信サービス名の配列を返す。作品IDとサービス名だけを持ち、TMDBのIDは保持しない */
 function svcOf(id){
   if (!stream) return null;
   var e = stream.titles[id];
-  if (!e) return null;
-  return {
-    names: e.p.map(function(i){ return stream.names[i]; }),
-    link: e.t ? "https://www.themoviedb.org/" + e.t + "/watch?locale=JP" : ""
-  };
+  return (e && e.length) ? e.map(function(i){ return stream.names[i]; }) : null;
 }
-function svcDetail(id){
+function svcDetail(m){
   if (!stream) return "—";
-  var s = svcOf(id);
-  if (!s || !s.names.length) return "情報なし";
-  return s.names.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
-    (s.link ? ' <a href="' + esc(s.link) + '" target="_blank" rel="noopener" style="font-size:11px">配信一覧</a>' : "");
+  var names = svcOf(m.id);
+  if (!names) return "情報なし";
+  var q = m.title.english || m.title.romaji || m.title.native || "";
+  var link = "https://www.themoviedb.org/search?query=" + encodeURIComponent(q);
+  return names.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
+    ' <a href="' + esc(link) + '" target="_blank" rel="noopener" style="font-size:11px">TMDBで確認</a>';
 }
 function svcTags(id, max){
-  var s = svcOf(id);
-  if (!s || !s.names.length) return "";
-  var shown = s.names.slice(0, max);
-  var rest = s.names.length - shown.length;
+  var names = svcOf(id);
+  if (!names) return "";
+  var shown = names.slice(0, max);
+  var rest = names.length - shown.length;
   return '<div class="svcs">' +
     shown.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
     (rest > 0 ? '<span class="svc more">+' + rest + "</span>" : "") + "</div>";
@@ -1012,7 +1013,7 @@ function openDetail(id){
       "<dt>スコア</dt><dd>" + (m.averageScore ? (m.averageScore / 10).toFixed(1) + " / 10" : "—") +
         "（人気度 " + (m.popularity || 0).toLocaleString() + "）</dd>" +
       "<dt>ジャンル</dt><dd>" + esc((m.genres || []).map(function(g){ return GENRES[g] || g; }).join("、") || "—") + "</dd>" +
-      "<dt>配信</dt><dd>" + svcDetail(m.id) + "</dd>" +
+      "<dt>配信</dt><dd>" + svcDetail(m) + "</dd>" +
       "</dl>" +
       '<div class="links">' + trailer +
         '<a href="' + esc(m.siteUrl) + '" target="_blank" rel="noopener">AniList</a>' + links + "</div>" +

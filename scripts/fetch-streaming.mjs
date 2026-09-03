@@ -179,16 +179,17 @@ const names = [...(base.names || [])];
 const nameIdx = new Map(names.map((n, i) => [n, i]));
 const titles = ALL ? {} : { ...(base.titles || {}) };
 
+/* 出力にはTMDB IDを含めない。
+   対応表（Fribb/anime-lists ← anime-offline-database, ODbL 1.0）は照合にのみ使い、
+   その内容を公開物へ持ち出さないことで、ODbLの継承条項と
+   TMDB規約の再許諾禁止が衝突しないようにしている。 */
 for (const [aniId, ref] of refByAni) {
   const list = result.get(ref);
   if (!list) { if (!ALL) delete titles[aniId]; continue; }
-  titles[aniId] = {
-    p: list.map((n) => {
-      if (!nameIdx.has(n)) { nameIdx.set(n, names.length); names.push(n); }
-      return nameIdx.get(n);
-    }),
-    t: ref,
-  };
+  titles[aniId] = list.map((n) => {
+    if (!nameIdx.has(n)) { nameIdx.set(n, names.length); names.push(n); }
+    return nameIdx.get(n);
+  });
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
