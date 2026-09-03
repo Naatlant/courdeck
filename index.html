@@ -58,6 +58,13 @@
   .use{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
   .use div{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);
     border-radius:0 8px 8px 0;padding:12px 14px;font-size:13.5px}
+  .flow{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .flow>div{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);
+    border-radius:8px;padding:12px 10px;font-size:12.5px;font-weight:600;text-align:center;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center}
+  .flow>div small{display:block;font-weight:400;font-size:11px;color:var(--muted);margin-top:3px}
+  .flow>span{align-self:center;color:var(--muted);font-size:14px}
+  @media(max-width:600px){ .flow>span{display:none} .flow>div{min-width:0;flex:1 1 45%} }
   code{background:var(--accent-weak);color:var(--accent);padding:1px 6px;border-radius:4px;
     font-size:12.5px;font-family:Consolas,"Courier New",monospace}
   footer{border-top:1px solid var(--border);padding-top:22px;font-size:12px;color:var(--muted)}
@@ -78,13 +85,14 @@
     <p class="eyebrow">WEB アプリ制作サンプル / 外部API連携</p>
     <h1>アニメまとめ</h1>
     <p class="sub">
-      外部APIから今季・過去のアニメ情報を自動取得し、一覧・集計・週間放送スケジュールとして
-      表示するWebアプリです。サーバー不要・依存ライブラリなしの単一HTMLファイルで動作します。
+      外部APIから今季・過去のアニメ情報を自動取得し、一覧・集計・週間放送スケジュール・
+      国内の配信状況として表示するWebアプリです。画面本体は依存ライブラリなしの
+      単一HTMLファイル、配信情報は日次バッチで生成した静的JSONを読み込む構成です。
     </p>
     <div class="cta">
       <a class="btn primary" href="anime.html">デモを開く</a>
       <a class="btn" href="https://github.com/Naatlant/anime-matome">ソースコード</a>
-      <span class="hint">ブラウザで開くだけで動作します（登録・APIキー不要）</span>
+      <span class="hint">登録不要・そのまま操作できます</span>
     </div>
   </header>
 
@@ -113,11 +121,31 @@
       </div>
       <div class="card">
         <p class="num">05</p>
-        <h3>詳細情報とお気に入り</h3>
-        <p>あらすじ・放送期間・次回放送日時・制作会社・PV・公式サイト・配信先リンクを表示。気になる作品は端末内に保存できます。</p>
+        <h3>国内の配信サービス表示</h3>
+        <p>dアニメ・Prime Video・U-NEXT・Netflix など、日本で視聴できるサービスを作品ごとに表示します。6,152作品分を収録しています。</p>
       </div>
       <div class="card">
         <p class="num">06</p>
+        <h3>日本語のあらすじ</h3>
+        <p>元データのあらすじは英語のみのため、日本語版Wikipediaの導入部を照合して表示します。出典を明記し、英語の原文にも切り替えられます。</p>
+      </div>
+      <div class="card">
+        <p class="num">07</p>
+        <h3>マウスオーバーで拡大表示</h3>
+        <p>カードにカーソルを合わせると、バナー画像・スコア・配信サービス・次回放送を含む拡大パネルが浮き出ます。</p>
+      </div>
+      <div class="card">
+        <p class="num">08</p>
+        <h3>詳細情報とお気に入り</h3>
+        <p>放送期間・次回放送日時・制作会社・原作媒体・PV・公式サイトを表示。気になる作品は端末内に保存し、週間表を登録作品だけに絞れます。</p>
+      </div>
+      <div class="card">
+        <p class="num">09</p>
+        <h3>条件をURLで共有</h3>
+        <p>絞り込み条件と表示タブがURLに入るため、そのまま共有・ブックマークできます。ブラウザの戻る操作にも対応しています。</p>
+      </div>
+      <div class="card">
+        <p class="num">10</p>
         <h3>オフラインでも閲覧可能</h3>
         <p>通信できないときは直近の取得データに自動で切り替え、いつ時点の情報かを明示します。復旧時はワンクリックで最新に戻せます。</p>
       </div>
@@ -128,16 +156,45 @@
     <h2>技術構成</h2>
     <dl class="spec">
       <dt>構成</dt>
-      <dd>単一HTMLファイル（約840行）。HTML / CSS / JavaScript のみで、外部ライブラリ・ビルド・サーバーは不要です。</dd>
-      <dt>データ取得</dt>
+      <dd>画面本体は単一HTMLファイル（約1,200行）。HTML / CSS / JavaScript のみで、外部ライブラリもビルドも使っていません。</dd>
+      <dt>作品情報</dt>
       <dd>AniList GraphQL API。作品一覧と放送スケジュールの2種類のクエリをフィールド定義共有で構築しています。</dd>
+      <dt>あらすじ</dt>
+      <dd>日本語版Wikipedia API。完全一致 → 季数を除いた題名 → 検索の3段階で照合し、誤マッチを抑えています。</dd>
+      <dt>配信情報</dt>
+      <dd>TMDB API（提供元は JustWatch）。GitHub Actions で日次取得し、静的JSONとして配信します。</dd>
       <dt>キャッシュ</dt>
       <dd>localStorage に6時間保持。APIのレート制限（30リクエスト/分）対策と再訪時の高速表示を兼ねています。</dd>
       <dt>表示</dt>
       <dd>CSS Grid によるレスポンシブ対応（PC / タブレット / スマートフォン）。OSのダークモード設定に自動追従します。</dd>
       <dt>動作環境</dt>
-      <dd>Chrome / Edge / Firefox / Safari の現行版。インストール不要、ファイルを開くだけで動作します。</dd>
+      <dd>Chrome / Edge / Firefox / Safari の現行版。インストール不要です。</dd>
     </dl>
+  </section>
+
+  <section>
+    <h2>配信情報の設計</h2>
+    <p style="font-size:13.5px;color:var(--muted)">
+      配信情報の取得にはAPIキーが必要ですが、公開ページにキーを置けば誰でも読み取れてしまいます。
+      そこで<strong>実行時にAPIを呼ばず、バッチで生成した静的データを読む構成</strong>にしました。
+      キーはCI側の秘密情報として保管され、公開物には一切現れません。表示も速いままです。
+    </p>
+    <div class="flow">
+      <div>CI（日次・週次）</div>
+      <span>→</span>
+      <div>ID対応表<br><small>AniList → TMDB</small></div>
+      <span>→</span>
+      <div>TMDB API<br><small>日本の配信状況</small></div>
+      <span>→</span>
+      <div>静的JSON<br><small>6,152作品 / 47KB</small></div>
+      <span>→</span>
+      <div>ブラウザ</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:14px">
+      分割クールや続編は同一シリーズを指すため、取得前に重複を排除して
+      8,123件のリクエストを5,452件まで削減しています。日次は放送中シーズンのみを差分更新し、
+      全件の再取得は週1回に留めることで、外部APIへの負荷を抑えています。
+    </p>
   </section>
 
   <section>
@@ -161,7 +218,15 @@
       </li>
       <li>
         <h3>外部データの安全な描画</h3>
-        <p>APIから受け取った文字列はすべてエスケープしてから描画し、HTMLを含む説明文はタグを除去したうえでテキストとして表示します。</p>
+        <p>APIから受け取った文字列はすべてエスケープしてから描画し、HTMLを含む説明文はタグを除去したうえでテキストとして表示します。URLパラメータの値も選択肢と照合して検証します。</p>
+      </li>
+      <li>
+        <h3>複数データ源の突き合わせ</h3>
+        <p>作品情報・配信情報・あらすじは提供元が異なるため、ID対応表と題名の正規化で紐付けています。続編表記や記号の揺れを吸収し、一致しない場合は誤った情報を出さずに省略します。</p>
+      </li>
+      <li>
+        <h3>認証情報を公開物に含めない</h3>
+        <p>APIキーが必要なデータはCI側で取得し、生成物だけを公開します。鍵は秘密情報として保管され、ブラウザに配信されるファイルには現れません。</p>
       </li>
     </ul>
   </section>
@@ -182,8 +247,11 @@
   </section>
 
   <footer>
-    <p>データ提供: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>（作品情報・画像の権利は各権利者に帰属します）</p>
-    <p>本ページおよびアプリは制作サンプルです。表示内容の正確性を保証するものではありません。</p>
+    <p>作品情報・画像: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>　／
+      あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（CC BY-SA）　／
+      配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>・JustWatch</p>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    <p>各作品の権利は権利者に帰属します。本ページおよびアプリは制作サンプルであり、表示内容の正確性を保証するものではありません。配信状況は変動するため、実際の視聴可否は各サービスでご確認ください。</p>
   </footer>
 
 </div>
