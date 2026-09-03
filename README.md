@@ -133,6 +133,27 @@ sublicensing TMDB content. If you want to reuse that data, **get your own TMDB A
 comply with those terms yourself**. Commercial use is not permitted, and TMDB counts ad
 revenue and traffic generation as commercial.
 
+## Privacy
+
+Nothing is collected. There is no analytics, no advertising, and no backend of our own.
+Favorites and preferences are stored in your browser's localStorage and never leave your
+device.
+
+## Notes on upstream terms
+
+- **Unofficial.** This project is not affiliated with, endorsed by, or approved by AniList
+  or TMDB.
+- **AniList** allows non-commercial use of its API and asks that clients not act as
+  competing list/tracker services. This app links back to each title's AniList page and
+  adds Japan-specific information (streaming availability, broadcast-day handling) that
+  AniList does not provide.
+- **[Fribb/anime-lists](https://github.com/Fribb/anime-lists)**, used for ID mapping,
+  currently publishes **no license**. The mapping is consumed at build time only, and the
+  generated file stores nothing more than ID pairs, but be aware of this if you fork the
+  project.
+- Cover images are served from AniList's CDN and remain the property of their rights
+  holders.
+
 ## Credits
 
 - Titles, artwork, schedules: [AniList](https://anilist.co)

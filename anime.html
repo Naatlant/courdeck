@@ -184,10 +184,11 @@
   <h1>アニメまとめ</h1>
   <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。<br>
     作品情報: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> ／
-    あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（CC BY-SA） ／
+    あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>） ／
     国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a>
     ・JustWatch（1日1回更新）<br>
-    <span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span></p>
+    <span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span><br>
+    本アプリは AniList・TMDB とは無関係の非公式・非営利プロジェクトです。利用者の情報は収集せず、お気に入りや設定はお使いの端末内にのみ保存されます。</p>
 
   <div class="panel" id="searchPanel">
     <div class="presets">
@@ -870,7 +871,7 @@ function renderDesc(){
   var src = "";
   if (curDesc.ja){
     src = showJa
-      ? '<p class="src"><span>出典: <a href="' + esc(curDesc.url) + '" target="_blank" rel="noopener">ウィキペディア日本語版「' + esc(curDesc.wtitle) + '」</a>（CC BY-SA）</span>' +
+      ? '<p class="src"><span>出典: <a href="' + esc(curDesc.url) + '" target="_blank" rel="noopener">ウィキペディア日本語版「' + esc(curDesc.wtitle) + '」</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>）</span>' +
         (curDesc.en ? '<button id="descToggle">英語の原文</button>' : "") + "</p>"
       : '<p class="src"><span>出典: AniList（英語）</span><button id="descToggle">日本語の概要</button></p>';
   } else if (curDesc.loading){
