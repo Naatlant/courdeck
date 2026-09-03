@@ -1,0 +1,62 @@
+MIT License
+
+Copyright (c) 2026 Naatlant
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+
+SCOPE / 適用範囲
+
+The MIT License above applies ONLY to the source code authored in this
+repository:
+
+    anime.html
+    index.html
+    scripts/**
+    .github/**
+
+It does NOT apply to the following, which remain subject to the terms of their
+respective providers. They are included here solely so that this application can
+display them, and are NOT sublicensed to you.
+
+  data/streaming.json
+      Derived from TMDB (https://www.themoviedb.org/) and JustWatch.
+      Governed by the TMDB API Terms of Use
+      (https://www.themoviedb.org/api-terms-of-use).
+      Non-commercial use only. If you reuse this data, you must obtain your own
+      TMDB API key and comply with those terms yourself.
+
+  assets/tmdb.svg
+      Trademark of TMDB, included for the attribution required by their terms.
+      Not licensed for any other use.
+
+Content fetched at runtime is likewise owned by its providers:
+
+  Titles, images, and schedules   AniList (https://anilist.co)
+  Synopses                        Japanese Wikipedia, CC BY-SA
+                                  (https://ja.wikipedia.org/)
+
+上記MITライセンスは、このリポジトリで書かれたソースコードにのみ適用されます。
+`data/streaming.json` と `assets/tmdb.svg` は各提供元の規約に従うものであり、
+MITライセンスの対象外です。データを再利用する場合は、ご自身でTMDBのAPIキーを取得し、
+TMDBの規約を遵守してください。商用利用はできません。
+
+This product uses TMDB and the TMDB APIs but is not endorsed, certified, or
+otherwise approved by TMDB.

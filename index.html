@@ -69,6 +69,8 @@
     font-size:12.5px;font-family:Consolas,"Courier New",monospace}
   footer{border-top:1px solid var(--border);padding-top:22px;font-size:12px;color:var(--muted)}
   footer p{margin:0 0 6px}
+  footer a{color:var(--muted)}
+  footer .tmdb{height:12px;vertical-align:-2px}
   @media(max-width:600px){
     body{padding:0 16px 56px}
     header{padding:44px 0 32px;margin-bottom:36px}
@@ -249,8 +251,10 @@
   <footer>
     <p>作品情報・画像: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>　／
       あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（CC BY-SA）　／
-      配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>・JustWatch</p>
-    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+      配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a>・JustWatch</p>
+    <p>This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</p>
+    <p>本アプリは非営利の公開ツールです。ソースコードは MIT ライセンスで公開していますが、
+      配信情報のデータは TMDB / JustWatch に帰属し、MIT の対象外です（再利用には各自でのTMDB規約遵守が必要です）。</p>
     <p>各作品の権利は権利者に帰属します。本ページおよびアプリは制作サンプルであり、表示内容の正確性を保証するものではありません。配信状況は変動するため、実際の視聴可否は各サービスでご確認ください。</p>
   </footer>
 

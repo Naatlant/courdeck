@@ -102,13 +102,25 @@ node scripts/fetch-streaming.mjs        # 前季〜来季＋歴代トップ（�
 node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 ```
 
+## ライセンス
+
+ソースコードは [MIT License](LICENSE) です。ただし**適用範囲はこのリポジトリで書かれたコードに限られます**。
+
+| 対象 | ライセンス |
+| --- | --- |
+| `anime.html` / `index.html` / `scripts/` / `.github/` | MIT |
+| `data/streaming.json` | **MIT対象外**。TMDB / JustWatch に帰属 |
+| `assets/tmdb.svg` | **MIT対象外**。TMDBの商標（帰属表示のために同梱） |
+
+配信データは [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use) に従います。同規約はTMDBコンテンツの再許諾（sublicense）を認めていないため、このJSONを再利用する場合は、**ご自身でTMDBのAPIキーを取得し、同規約を遵守してください**。商用利用はできません（広告収入や集客目的の利用も商用と見なされます）。
+
 ## クレジット
 
 - 作品情報・画像: [AniList](https://anilist.co)
 - あらすじ: [ウィキペディア日本語版](https://ja.wikipedia.org/)（CC BY-SA）
-- 配信情報: [TMDB](https://www.themoviedb.org/) / JustWatch
+- 配信情報: [![TMDB](assets/tmdb.svg)](https://www.themoviedb.org/) / JustWatch
 - ID対応表: [Fribb/anime-lists](https://github.com/Fribb/anime-lists)
 
-> This product uses the TMDB API but is not endorsed or certified by TMDB.
+> This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
 
-各作品の権利は権利者に帰属します。本リポジトリは制作サンプルであり、表示内容の正確性を保証するものではありません。配信状況は変動するため、実際の視聴可否は各サービスでご確認ください。
+各作品の権利は権利者に帰属します。本リポジトリは非営利の公開ツールであり、表示内容の正確性を保証するものではありません。配信状況は変動するため、実際の視聴可否は各サービスでご確認ください。

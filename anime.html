@@ -25,7 +25,10 @@
     font-size:14px;line-height:1.6;}
   .wrap{max-width:1180px;margin:0 auto}
   h1{font-size:20px;margin:0 0 4px;font-weight:600;letter-spacing:.02em}
-  .lead{font-size:12px;color:var(--muted);margin:0 0 16px}
+  .lead{font-size:12px;color:var(--muted);margin:0 0 16px;line-height:1.9}
+  .lead a{color:var(--muted)}
+  .lead .tmdb{height:11px;vertical-align:-1px}
+  .lead .notice-en{font-size:11px;opacity:.85}
   h2{font-size:12px;margin:0 0 12px;font-weight:600;color:var(--muted);letter-spacing:.08em}
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;
     padding:14px 16px;margin-bottom:16px;box-shadow:var(--shadow)}
@@ -166,9 +169,12 @@
 <body>
 <div class="wrap">
   <h1>アニメまとめ</h1>
-  <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。作品情報: anilist.co ／
-    国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>・JustWatch（1日1回更新）<br>
-    This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。<br>
+    作品情報: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> ／
+    あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（CC BY-SA） ／
+    国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a>
+    ・JustWatch（1日1回更新）<br>
+    <span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span></p>
 
   <div class="panel" id="searchPanel">
     <div class="presets">
