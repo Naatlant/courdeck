@@ -181,82 +181,75 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>アニメまとめ</h1>
-  <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。<br>
-    作品情報: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> ／
-    あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>） ／
-    国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a>
-    ・JustWatch（1日1回更新） ／
-    ID対応: <a href="https://github.com/Fribb/anime-lists" target="_blank" rel="noopener">Fribb/anime-lists</a>
-    ←<a href="https://github.com/manami-project/anime-offline-database" target="_blank" rel="noopener">anime-offline-database</a>（<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a>）<br>
-    <span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span><br>
-    本アプリは AniList・TMDB とは無関係の非公式・非営利プロジェクトです。利用者の情報は収集せず、お気に入りや設定はお使いの端末内にのみ保存されます。</p>
+  <h1 data-i18n="app.title">アニメまとめ</h1>
+  <p class="lead" id="lead"></p>
 
   <div class="panel" id="searchPanel">
     <div class="presets">
-      <button data-preset="current">今季</button>
-      <button data-preset="prev">前季</button>
-      <button data-preset="next">来季</button>
-      <button data-preset="airing">放送中の話題作</button>
-      <button data-preset="alltime">歴代トップ</button>
-      <button data-preset="year">今年のベスト</button>
+      <button data-preset="current" data-i18n="p.current">今季</button>
+      <button data-preset="prev" data-i18n="p.prev">前季</button>
+      <button data-preset="next" data-i18n="p.next">来季</button>
+      <button data-preset="airing" data-i18n="p.airing">放送中の話題作</button>
+      <button data-preset="alltime" data-i18n="p.alltime">歴代トップ</button>
+      <button data-preset="year" data-i18n="p.year">今年のベスト</button>
     </div>
     <button id="toggleFilters" class="mobonly">詳細な絞り込み ▾</button>
     <div class="filters collapsed" id="filters">
-      <label class="f">年<select id="year"></select></label>
-      <label class="f">季節<select id="season">
-        <option value="">通年</option>
-        <option value="WINTER">冬 (1-3月)</option>
-        <option value="SPRING">春 (4-6月)</option>
-        <option value="SUMMER">夏 (7-9月)</option>
-        <option value="FALL">秋 (10-12月)</option>
+      <label class="f"><span data-i18n="f.year">年</span><select id="year"></select></label>
+      <label class="f"><span data-i18n="f.season">季節</span><select id="season">
+        <option value="" data-i18n="s.all">通年</option>
+        <option value="WINTER" data-i18n="s.winter">冬 (1-3月)</option>
+        <option value="SPRING" data-i18n="s.spring">春 (4-6月)</option>
+        <option value="SUMMER" data-i18n="s.summer">夏 (7-9月)</option>
+        <option value="FALL" data-i18n="s.fall">秋 (10-12月)</option>
       </select></label>
-      <label class="f">並び順<select id="sort">
-        <option value="POPULARITY_DESC">人気順</option>
-        <option value="SCORE_DESC">スコア順</option>
-        <option value="TRENDING_DESC">話題順</option>
-        <option value="START_DATE_DESC">放送開始が新しい順</option>
-        <option value="FAVOURITES_DESC">お気に入り数順</option>
-        <option value="TITLE_ROMAJI">タイトル順</option>
+      <label class="f"><span data-i18n="f.sort">並び順</span><select id="sort">
+        <option value="POPULARITY_DESC" data-i18n="o.pop">人気順</option>
+        <option value="SCORE_DESC" data-i18n="o.score">スコア順</option>
+        <option value="TRENDING_DESC" data-i18n="o.trend">話題順</option>
+        <option value="START_DATE_DESC" data-i18n="o.new">放送開始が新しい順</option>
+        <option value="FAVOURITES_DESC" data-i18n="o.fav">お気に入り数順</option>
+        <option value="TITLE_ROMAJI" data-i18n="o.title">タイトル順</option>
       </select></label>
-      <label class="f">形式<select id="format">
-        <option value="">すべて</option>
+      <label class="f"><span data-i18n="f.format">形式</span><select id="format">
+        <option value="" data-i18n="any">すべて</option>
         <option value="TV">TV</option>
-        <option value="TV_SHORT">TV(短編)</option>
-        <option value="MOVIE">劇場版</option>
+        <option value="TV_SHORT" data-i18n="fmt.TV_SHORT">TV(短編)</option>
+        <option value="MOVIE" data-i18n="fmt.MOVIE">劇場版</option>
         <option value="OVA">OVA</option>
         <option value="ONA">ONA</option>
-        <option value="SPECIAL">スペシャル</option>
+        <option value="SPECIAL" data-i18n="fmt.SPECIAL">スペシャル</option>
       </select></label>
-      <label class="f">ジャンル<select id="genre"></select></label>
-      <label class="f">最低スコア<select id="minScore">
-        <option value="">指定なし</option>
-        <option value="60">60以上</option>
-        <option value="70">70以上</option>
-        <option value="75">75以上</option>
-        <option value="80">80以上</option>
-        <option value="85">85以上</option>
+      <label class="f"><span data-i18n="f.genre">ジャンル</span><select id="genre"></select></label>
+      <label class="f"><span data-i18n="f.score">最低スコア</span><select id="minScore">
+        <option value="" data-i18n="none">指定なし</option>
+        <option value="60" data-i18n="sc.60">60以上</option>
+        <option value="70" data-i18n="sc.70">70以上</option>
+        <option value="75" data-i18n="sc.75">75以上</option>
+        <option value="80" data-i18n="sc.80">80以上</option>
+        <option value="85" data-i18n="sc.85">85以上</option>
       </select></label>
-      <label class="f grow">キーワード<input id="q" type="search" placeholder="作品名で検索（全期間から）"></label>
-      <button id="apply" class="primary">この条件で取得</button>
+      <label class="f grow"><span data-i18n="f.keyword">キーワード</span><input id="q" type="search" data-i18n-ph="ph.q" placeholder="作品名で検索（全期間から）"></label>
+      <button id="apply" class="primary" data-i18n="btn.apply">この条件で取得</button>
     </div>
   </div>
 
   <div class="notice" id="notice" hidden></div>
 
   <div class="tabs">
-    <button id="tabList" class="on">一覧</button>
-    <button id="tabCal">曜日表</button>
-    <button id="tabFav">お気に入り <span id="favCount"></span></button>
+    <button id="tabList" class="on" data-i18n="tab.list">一覧</button>
+    <button id="tabCal" data-i18n="tab.cal">曜日表</button>
+    <button id="tabFav"><span data-i18n="tab.fav">お気に入り</span> <span id="favCount"></span></button>
     <span style="flex:1"></span>
-    <button id="reload" title="キャッシュを使わず最新を取り直す">再取得</button>
+    <button id="langBtn" title="Switch language">English</button>
+    <button id="reload" data-i18n="btn.reload" data-i18n-title="btn.reloadTip" title="キャッシュを使わず最新を取り直す">再取得</button>
   </div>
 
   <div class="panel" id="calBar" hidden>
     <div class="calbar">
-      <label><input type="checkbox" id="calSeason" checked>今季の作品のみ</label>
-      <label><input type="checkbox" id="calNoShort" checked>短編・特番・OVAを除く</label>
-      <label><input type="checkbox" id="calFav">お気に入りのみ</label>
+      <label><input type="checkbox" id="calSeason" checked><span data-i18n="cal.season">今季の作品のみ</span></label>
+      <label><input type="checkbox" id="calNoShort" checked><span data-i18n="cal.noshort">短編・特番・OVAを除く</span></label>
+      <label><input type="checkbox" id="calFav"><span data-i18n="cal.fav">お気に入りのみ</span></label>
     </div>
   </div>
 
@@ -319,6 +312,186 @@ MEDIA_FIELDS,
 "  }",
 "}"].join("\n");
 
+/* ---------- 言語（日本語 / English） ---------- */
+var LANG_KEY = "animeLang_v1";
+var LEAD_JA =
+  'AniList の公開APIから今季・過去シーズンの作品を自動取得します。<br>' +
+  '作品情報: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> ／ ' +
+  'あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>' +
+  '（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>） ／ ' +
+  '国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a>・JustWatch（1日1回更新） ／ ' +
+  'ID対応: <a href="https://github.com/Fribb/anime-lists" target="_blank" rel="noopener">Fribb/anime-lists</a>' +
+  '←<a href="https://github.com/manami-project/anime-offline-database" target="_blank" rel="noopener">anime-offline-database</a>' +
+  '（<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a>）<br>' +
+  '<span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span><br>' +
+  '本アプリは AniList・TMDB とは無関係の非公式・非営利プロジェクトです。利用者の情報は収集せず、お気に入りや設定はお使いの端末内にのみ保存されます。';
+var LEAD_EN =
+  'Seasonal and past anime, pulled automatically from public APIs. Streaming availability is for Japan.<br>' +
+  'Titles: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> / ' +
+  'Synopses: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">Japanese Wikipedia</a>' +
+  ' (<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>) / ' +
+  'Streaming: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener"><img class="tmdb" src="assets/tmdb.svg" alt="TMDB"></a> and JustWatch (updated daily) / ' +
+  'ID mapping: <a href="https://github.com/Fribb/anime-lists" target="_blank" rel="noopener">Fribb/anime-lists</a>' +
+  ' ← <a href="https://github.com/manami-project/anime-offline-database" target="_blank" rel="noopener">anime-offline-database</a>' +
+  ' (<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a>)<br>' +
+  '<span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span><br>' +
+  'An unofficial, non-commercial project, not affiliated with AniList or TMDB. Nothing is collected; favorites and settings stay in your browser.';
+
+var I18N = {
+  ja: {
+    "app.title": "アニメまとめ", lead: LEAD_JA, langBtn: "English",
+    docTitle: "アニメまとめ｜今季アニメ・週間放送表・国内の配信状況",
+    "p.current": "今季", "p.prev": "前季", "p.next": "来季",
+    "p.airing": "放送中の話題作", "p.alltime": "歴代トップ", "p.year": "今年のベスト",
+    "f.year": "年", "f.season": "季節", "f.sort": "並び順", "f.format": "形式",
+    "f.genre": "ジャンル", "f.score": "最低スコア", "f.keyword": "キーワード",
+    any: "すべて", none: "指定なし",
+    "s.all": "通年", "s.winter": "冬 (1-3月)", "s.spring": "春 (4-6月)",
+    "s.summer": "夏 (7-9月)", "s.fall": "秋 (10-12月)",
+    "o.pop": "人気順", "o.score": "スコア順", "o.trend": "話題順",
+    "o.new": "放送開始が新しい順", "o.fav": "お気に入り数順", "o.title": "タイトル順",
+    "fmt.TV_SHORT": "TV(短編)", "fmt.MOVIE": "劇場版", "fmt.SPECIAL": "スペシャル",
+    "sc.60": "60以上", "sc.70": "70以上", "sc.75": "75以上", "sc.80": "80以上", "sc.85": "85以上",
+    "ph.q": "作品名で検索（全期間から）", "btn.apply": "この条件で取得",
+    "btn.filters": "詳細な絞り込み", "btn.reload": "再取得",
+    "btn.reloadTip": "キャッシュを使わず最新を取り直す",
+    "tab.list": "一覧", "tab.cal": "曜日表", "tab.fav": "お気に入り",
+    "cal.season": "今季の作品のみ", "cal.noshort": "短編・特番・OVAを除く", "cal.fav": "お気に入りのみ",
+    loading: "読み込み中…", empty: "該当する作品がありません。",
+    favEmpty: "お気に入りはまだありません。カードの★で追加できます。",
+    allLoaded: "すべて読み込みました", more: "さらに読み込む", retry: "再試行",
+    calLoading: "放送予定を取得中…", noAir: "放送なし", calLoadingSuffix: "（読み込み中…）",
+    offline: "オフラインになりました。表示中のデータは最後に取得した内容です。",
+    errOffline: "オフラインです。ネットワークに接続してから再試行してください。",
+    errConn: "AniList API に接続できませんでした。時間をおいて再試行してください。",
+    errRate: "APIのアクセス制限中です。約{s}秒後に「再取得」してください。",
+    errHttp: "取得に失敗しました (HTTP {s})",
+    staleOff: "オフラインのため、{t} に取得したデータを表示しています。",
+    staleOn: "APIに接続できないため、{t} に取得したデータを表示しています。",
+    "sum.suffix": " のまとめ", "sum.loaded": "読み込み済み", "sum.count": "作品数",
+    "sum.avg": "平均スコア", "sum.airing": "放送中", "sum.genre": "ジャンル上位",
+    "sum.studio": "制作会社上位", "sum.source": "原作",
+    unitWorks: " 件", unitShows: " 本", allSuffix: "（全件）",
+    scopeAll: "全期間", scopeAiring: "放送中の作品",
+    scopeSearchA: "「", scopeSearchB: "」の検索結果", scopeYear: "年", scopeSeason: "アニメ",
+    calRange: "{a} 〜 {b} の放送予定", calShown: "　表示 {n} 本 / 取得 {m} 本",
+    calFavNone: "　お気に入りに登録した作品は今週の放送予定にありません。",
+    calNote: "　深夜帯は24時制で表示しています（25:30 = 翌1:30）。時刻は端末のタイムゾーン基準です。",
+    close: "閉じる", favOn: "★ 登録済み", favOff: "☆ お気に入り",
+    "d.air": "放送", "d.status": "状態", "d.next": "次回放送", "d.format": "形式",
+    "d.studio": "制作", "d.source": "原作", "d.score": "スコア", "d.genre": "ジャンル",
+    "d.stream": "配信", "d.eps": " / 全{n}話", "d.min": " / {n}分",
+    popularity: "人気度", noInfo: "情報なし", tmdbCheck: "TMDBで確認",
+    noDesc: "あらすじは登録されていません。", srcWiki: "出典: ウィキペディア日本語版",
+    srcAni: "出典: AniList（英語）", showEn: "英語の原文", showJa: "日本語の概要",
+    wikiSearching: "日本語の概要を検索中…", epNo: "第{n}話", nextEp: "次回 第{n}話",
+    dash: "—"
+  },
+  en: {
+    "app.title": "Anime Matome", lead: LEAD_EN, langBtn: "日本語",
+    docTitle: "Anime Matome | Seasonal anime, weekly schedule, streaming in Japan",
+    "p.current": "This season", "p.prev": "Previous", "p.next": "Next",
+    "p.airing": "Trending now", "p.alltime": "All-time best", "p.year": "Best of the year",
+    "f.year": "Year", "f.season": "Season", "f.sort": "Sort by", "f.format": "Format",
+    "f.genre": "Genre", "f.score": "Min. score", "f.keyword": "Keyword",
+    any: "All", none: "Any",
+    "s.all": "Whole year", "s.winter": "Winter (Jan-Mar)", "s.spring": "Spring (Apr-Jun)",
+    "s.summer": "Summer (Jul-Sep)", "s.fall": "Fall (Oct-Dec)",
+    "o.pop": "Popularity", "o.score": "Score", "o.trend": "Trending",
+    "o.new": "Newest first", "o.fav": "Most favorited", "o.title": "Title",
+    "fmt.TV_SHORT": "TV Short", "fmt.MOVIE": "Movie", "fmt.SPECIAL": "Special",
+    "sc.60": "60+", "sc.70": "70+", "sc.75": "75+", "sc.80": "80+", "sc.85": "85+",
+    "ph.q": "Search by title (all years)", "btn.apply": "Apply",
+    "btn.filters": "More filters", "btn.reload": "Refresh",
+    "btn.reloadTip": "Re-fetch, bypassing the cache",
+    "tab.list": "List", "tab.cal": "Weekly", "tab.fav": "Favorites",
+    "cal.season": "This season only", "cal.noshort": "Hide shorts, specials and OVAs",
+    "cal.fav": "Favorites only",
+    loading: "Loading…", empty: "No titles match these filters.",
+    favEmpty: "No favorites yet. Use the ★ on any card to add one.",
+    allLoaded: "That's everything", more: "Load more", retry: "Retry",
+    calLoading: "Loading the schedule…", noAir: "Nothing airing", calLoadingSuffix: " (loading…)",
+    offline: "You are offline. Showing the last data that was fetched.",
+    errOffline: "You are offline. Reconnect and try again.",
+    errConn: "Could not reach the AniList API. Please try again later.",
+    errRate: "Rate limited by the API. Try refreshing in about {s} seconds.",
+    errHttp: "Request failed (HTTP {s})",
+    staleOff: "Offline — showing data fetched at {t}.",
+    staleOn: "Cannot reach the API — showing data fetched at {t}.",
+    "sum.suffix": " — summary", "sum.loaded": "Loaded", "sum.count": "Titles",
+    "sum.avg": "Average score", "sum.airing": "Airing now", "sum.genre": "Top genres",
+    "sum.studio": "Top studios", "sum.source": "Source material",
+    unitWorks: "", unitShows: "", allSuffix: " (all)",
+    scopeAll: "All years", scopeAiring: "Currently airing",
+    scopeSearchA: "Search results for “", scopeSearchB: "”", scopeYear: "", scopeSeason: "",
+    calRange: "Broadcasts for {a} – {b}", calShown: "　Showing {n} of {m}",
+    calFavNone: "　None of your favorites air this week.",
+    calNote: "　Late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning). Times follow your device's time zone.",
+    close: "Close", favOn: "★ Saved", favOff: "☆ Favorite",
+    "d.air": "Aired", "d.status": "Status", "d.next": "Next episode", "d.format": "Format",
+    "d.studio": "Studio", "d.source": "Source", "d.score": "Score", "d.genre": "Genres",
+    "d.stream": "Streaming", "d.eps": " / {n} eps", "d.min": " / {n} min",
+    popularity: "popularity", noInfo: "No data", tmdbCheck: "Look up on TMDB",
+    noDesc: "No synopsis available.", srcWiki: "Source: Japanese Wikipedia",
+    srcAni: "Source: AniList (English)", showEn: "English original", showJa: "Japanese summary",
+    wikiSearching: "Looking for a Japanese summary…", epNo: "Ep. {n}", nextEp: "Next: ep. {n}",
+    dash: "—"
+  }
+};
+
+var lang = "ja";
+function t(k, vars){
+  var s = (I18N[lang] && I18N[lang][k] != null) ? I18N[lang][k] : (I18N.ja[k] != null ? I18N.ja[k] : k);
+  if (vars) for (var p in vars) s = s.split("{" + p + "}").join(vars[p]);
+  return s;
+}
+function detectLang(){
+  var u = new URLSearchParams(location.search).get("lang");
+  if (u === "ja" || u === "en") return u;
+  var saved = null;
+  try { saved = localStorage.getItem(LANG_KEY); } catch(e){}
+  if (saved === "ja" || saved === "en") return saved;
+  return /^ja/i.test(navigator.language || "") ? "ja" : "en";
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+  el("lead").innerHTML = t("lead");
+  el("langBtn").textContent = t("langBtn");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function(n){
+    n.textContent = t(n.dataset.i18n);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-ph]"), function(n){
+    n.placeholder = t(n.dataset.i18nPh);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i18n-title]"), function(n){
+    n.title = t(n.dataset.i18nTitle);
+  });
+  el("toggleFilters").textContent =
+    t("btn.filters") + (el("filters").classList.contains("collapsed") ? " ▾" : " ▴");
+  fillGenreSelect();
+  el("sumTitle").textContent = scopeLabel() + t("sum.suffix");
+}
+
+/* 表示名は言語に応じて切り替える（英語側は AniList の原語表記をそのまま使う） */
+function genreName(g){ return lang === "ja" ? (GENRES[g] || g) : g; }
+function formatName(f){ return lang === "ja" ? (FORMATS[f] || f) : (FORMATS_EN[f] || f); }
+function statusName(s){ return lang === "ja" ? (STATUS[s] || "") : (STATUS_EN[s] || ""); }
+function seasonName(s){ return lang === "ja" ? (SEASONS[s] || "") : (SEASONS_EN[s] || ""); }
+function sourceName(s){
+  if (!s) return "";
+  return lang === "ja" ? (SOURCES[s] || s)
+                       : s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, " ");
+}
+/* 配信サービス名は固有名詞。英語表示では日本語表記だけ読みやすく置き換える */
+var SVC_EN = {
+  "dアニメ(Amazon)": "dAnime (Amazon)",
+  "アニメタイムズ(Amazon)": "Anime Times (Amazon)",
+  "東映アニメ(Amazon)": "Toei Animation (Amazon)",
+  "NHKオンデマンド(Amazon)": "NHK On Demand (Amazon)"
+};
+function svcName(n){ return lang === "ja" ? n : (SVC_EN[n] || n.replace(/\(Amazon\)$/, " (Amazon)")); }
+
 /* ---------- 日本国内の配信情報（GitHub Actions が日次で生成） ---------- */
 var stream = null;
 function loadStreaming(){
@@ -339,13 +512,13 @@ function svcOf(id){
   return (e && e.length) ? e.map(function(i){ return stream.names[i]; }) : null;
 }
 function svcDetail(m){
-  if (!stream) return "—";
+  if (!stream) return t("dash");
   var names = svcOf(m.id);
-  if (!names) return "情報なし";
+  if (!names) return t("noInfo");
   var q = m.title.english || m.title.romaji || m.title.native || "";
   var link = "https://www.themoviedb.org/search?query=" + encodeURIComponent(q);
-  return names.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
-    ' <a href="' + esc(link) + '" target="_blank" rel="noopener" style="font-size:11px">TMDBで確認</a>';
+  return names.map(function(n){ return '<span class="svc">' + esc(svcName(n)) + "</span>"; }).join("") +
+    ' <a href="' + esc(link) + '" target="_blank" rel="noopener" style="font-size:11px">' + t("tmdbCheck") + "</a>";
 }
 function svcTags(id, max){
   var names = svcOf(id);
@@ -353,7 +526,7 @@ function svcTags(id, max){
   var shown = names.slice(0, max);
   var rest = names.length - shown.length;
   return '<div class="svcs">' +
-    shown.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
+    shown.map(function(n){ return '<span class="svc">' + esc(svcName(n)) + "</span>"; }).join("") +
     (rest > 0 ? '<span class="svc more">+' + rest + "</span>" : "") + "</div>";
 }
 
@@ -366,6 +539,11 @@ var GENRES = {
 var FORMATS = {TV:"TV",TV_SHORT:"TV(短編)",MOVIE:"劇場版",OVA:"OVA",ONA:"ONA",SPECIAL:"SP",MUSIC:"MV"};
 var STATUS = {RELEASING:"放送中",FINISHED:"放送終了",NOT_YET_RELEASED:"放送前",CANCELLED:"中止",HIATUS:"休止中"};
 var SEASONS = {WINTER:"冬",SPRING:"春",SUMMER:"夏",FALL:"秋"};
+var FORMATS_EN = {TV:"TV",TV_SHORT:"TV Short",MOVIE:"Movie",OVA:"OVA",ONA:"ONA",SPECIAL:"SP",MUSIC:"MV"};
+var STATUS_EN = {RELEASING:"Airing",FINISHED:"Finished",NOT_YET_RELEASED:"Upcoming",
+  CANCELLED:"Cancelled",HIATUS:"Hiatus"};
+var SEASONS_EN = {WINTER:"Winter",SPRING:"Spring",SUMMER:"Summer",FALL:"Fall"};
+var WEEK_EN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 var SOURCES = {ORIGINAL:"オリジナル",MANGA:"漫画",LIGHT_NOVEL:"ライトノベル",VISUAL_NOVEL:"ビジュアルノベル",
   VIDEO_GAME:"ゲーム",NOVEL:"小説",OTHER:"その他",DOUJINSHI:"同人",ANIME:"アニメ",WEB_NOVEL:"Web小説",
   LIVE_ACTION:"実写",GAME:"ゲーム",COMIC:"コミック",MULTIMEDIA_PROJECT:"メディアミックス",PICTURE_BOOK:"絵本"};
@@ -445,9 +623,9 @@ function gql(query, vars, tag){
   }).then(function(res){
     if (res.status === 429){
       var wait = res.headers.get("Retry-After") || "60";
-      throw new Error("APIのアクセス制限中です。約" + wait + "秒後に「再取得」してください。");
+      throw new Error(t("errRate", {s: wait}));
     }
-    if (!res.ok) throw new Error("取得に失敗しました (HTTP " + res.status + ")");
+    if (!res.ok) throw new Error(t("errHttp", {s: res.status}));
     return res.json();
   }).then(function(json){
     if (json.errors) throw new Error(json.errors.map(function(e){ return e.message; }).join(" / "));
@@ -466,19 +644,18 @@ function gql(query, vars, tag){
 }
 
 function friendlyError(err){
-  if (!navigator.onLine) return "オフラインです。ネットワークに接続してから再試行してください。";
-  if (err instanceof TypeError) return "AniList API に接続できませんでした。時間をおいて再試行してください。";
+  if (!navigator.onLine) return t("errOffline");
+  if (err instanceof TypeError) return t("errConn");
   return err.message;
 }
-function staleNotice(t){
-  var when = new Date(t).toLocaleString("ja-JP",
+function staleNotice(at){
+  var when = new Date(at).toLocaleString(lang === "ja" ? "ja-JP" : "en-US",
     {month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"});
-  showNotice((navigator.onLine ? "APIに接続できないため" : "オフラインのため") +
-    "、" + when + " に取得したデータを表示しています。");
+  showNotice(t(navigator.onLine ? "staleOn" : "staleOff", {t: when}));
 }
 function showNotice(text){
   var n = el("notice");
-  n.innerHTML = "<span>" + esc(text) + '</span><button id="retry">再試行</button>';
+  n.innerHTML = "<span>" + esc(text) + '</span><button id="retry">' + t("retry") + "</button>";
   n.hidden = false;
   el("retry").onclick = refresh;
 }
@@ -535,7 +712,7 @@ function reset(){
   state.page = 1; state.hasNext = true; state.items = []; state.total = 0; state.autoPages = 0;
   setView("list");
   el("grid").innerHTML = ""; el("summary").hidden = true;
-  msg("読み込み中…");
+  msg(t("loading"));
   loadMore();
 }
 
@@ -561,11 +738,11 @@ function setView(v){
 }
 
 function el(id){ return document.getElementById(id); }
-function msg(t, isErr, retry){
+function msg(text, isErr, retry){
   var m = el("msg");
-  m.innerHTML = t ? esc(t) + (retry ? '<button id="msgRetry">再試行</button>' : "") : "";
+  m.innerHTML = text ? esc(text) + (retry ? '<button id="msgRetry">' + t("retry") + "</button>" : "") : "";
   m.className = "msg" + (isErr ? " err" : "");
-  m.style.display = t ? "" : "none";
+  m.style.display = text ? "" : "none";
   var b = el("msgRetry");
   if (b) b.onclick = refresh;
 }
@@ -574,15 +751,21 @@ function esc(s){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
   });
 }
-function title(m){ return m.title.native || m.title.romaji || m.title.english || "(無題)"; }
+function title(m){
+  var x = m.title || {};
+  return lang === "ja" ? (x.native || x.romaji || x.english || "—")
+                       : (x.english || x.romaji || x.native || "—");
+}
 function studios(m){ return m.studios && m.studios.nodes ? m.studios.nodes.map(function(s){ return s.name; }) : []; }
+function sep(){ return lang === "ja" ? "、" : ", "; }
 function subtitle(m){
-  var parts = [FORMATS[m.format] || m.format || "", m.episodes ? m.episodes + "話" : "", studios(m)[0] || ""];
-  return parts.filter(Boolean).join(" ・ ");
+  var eps = m.episodes ? (lang === "ja" ? m.episodes + "話" : m.episodes + " eps") : "";
+  var parts = [formatName(m.format) || m.format || "", eps, studios(m)[0] || ""];
+  return parts.filter(Boolean).join(lang === "ja" ? " ・ " : " · ");
 }
 function statusTag(m){
   var cls = m.status === "RELEASING" ? "air" : m.status === "NOT_YET_RELEASED" ? "pre" : "end";
-  return '<span class="tag ' + cls + '">' + (STATUS[m.status] || "—") + "</span>";
+  return '<span class="tag ' + cls + '">' + (statusName(m.status) || t("dash")) + "</span>";
 }
 function currentList(){
   if (state.view !== "fav") return state.items;
@@ -598,30 +781,30 @@ function renderGrid(){
       ? '<img loading="lazy" src="' + esc(m.coverImage.large) + '" alt="">' : "";
     var sc = m.averageScore ? '<span class="score">' + (m.averageScore / 10).toFixed(1) + "</span>" : "";
     var gen = (m.genres || []).slice(0, 2).map(function(x){
-      return '<span class="tag">' + esc(GENRES[x] || x) + "</span>";
+      return '<span class="tag">' + esc(genreName(x)) + "</span>";
     }).join("");
     return '<article class="card" data-id="' + m.id + '">' +
       '<div class="thumb">' + img + sc +
-      '<button class="fav' + on + '" data-fav="' + m.id + '" title="お気に入り">★</button></div>' +
+      '<button class="fav' + on + '" data-fav="' + m.id + '" title="' + t("tab.fav") + '">★</button></div>' +
       '<div class="body"><div class="ttl">' + esc(title(m)) + "</div>" +
       '<div class="sub">' + esc(subtitle(m)) + "</div>" +
       "<div>" + statusTag(m) + gen + "</div>" + svcTags(m.id, 2) + "</div></article>";
   }).join("");
   if (!list.length && !state.loading){
-    msg(state.view === "fav" ? "お気に入りはまだありません。カードの★で追加できます。" : "該当する作品がありません。");
+    msg(state.view === "fav" ? t("favEmpty") : t("empty"));
   }
 }
 
 function renderMore(){
   var box = el("more");
   if (state.view !== "list"){ box.innerHTML = ""; return; }
-  if (state.loading){ box.innerHTML = '<span class="msg">読み込み中…</span>'; return; }
+  if (state.loading){ box.innerHTML = '<span class="msg">' + t("loading") + "</span>"; return; }
   if (!state.hasNext){
-    box.innerHTML = state.items.length ? '<span class="msg">すべて読み込みました</span>' : "";
+    box.innerHTML = state.items.length ? '<span class="msg">' + t("allLoaded") + "</span>" : "";
     return;
   }
   /* 自動読み込みが続く間はボタンを出さない（上限到達・未対応環境のみ手動） */
-  box.innerHTML = canAutoLoad() ? "" : '<button id="btnMore">さらに読み込む</button>';
+  box.innerHTML = canAutoLoad() ? "" : '<button id="btnMore">' + t("more") + "</button>";
   var b = el("btnMore");
   if (b) b.onclick = function(){ state.autoPages = 0; loadMore(true); };
 }
@@ -638,42 +821,48 @@ function bars(rows){
   if (!rows.length) return '<div class="bars"><div class="bar"><span>—</span></div></div>';
   var max = rows[0][1];
   return '<div class="bars">' + rows.map(function(r){
-    return '<div class="bar"><span>' + esc(GENRES[r[0]] || r[0]) + "</span>" +
+    return '<div class="bar"><span>' + esc(genreName(r[0])) + "</span>" +
       '<i style="width:' + Math.round(r[1] / max * 100) + '%"></i><b>' + r[1] + "</b></div>";
   }).join("") + "</div>";
 }
 function scopeLabel(){
-  if (state.q.trim()) return "「" + state.q.trim() + "」の検索結果";
-  if (state.status === "RELEASING") return "放送中の作品";
-  var y = state.year ? state.year + "年" : "全期間";
-  return y + (state.season ? SEASONS[state.season] + "アニメ" : "");
+  if (state.q.trim()) return t("scopeSearchA") + state.q.trim() + t("scopeSearchB");
+  if (state.status === "RELEASING") return t("scopeAiring");
+  var season = state.season ? seasonName(state.season) : "";
+  if (lang === "ja"){
+    return (state.year ? state.year + "年" : t("scopeAll")) + (season ? season + "アニメ" : "");
+  }
+  var y = state.year ? String(state.year) : t("scopeAll");
+  return (season ? season + " " : "") + y;
 }
 function renderSummary(){
   var list = state.items;
   if (state.view === "fav" || !list.length){ el("summary").hidden = true; return; }
   var scored = list.filter(function(m){ return m.averageScore; });
   var avg = scored.length
-    ? (scored.reduce(function(s, m){ return s + m.averageScore; }, 0) / scored.length / 10).toFixed(1) : "—";
+    ? (scored.reduce(function(s, m){ return s + m.averageScore; }, 0) / scored.length / 10).toFixed(1) : t("dash");
   var airing = list.filter(function(m){ return m.status === "RELEASING"; }).length;
-  el("sumTitle").textContent = scopeLabel() + " のまとめ";
+  el("sumTitle").textContent = scopeLabel() + t("sum.suffix");
   el("stats").innerHTML =
     /* AniList は途中のページでは total=5000 の固定値を返すため、全件読み終えるまで総数は出さない */
-    '<div class="stat"><div class="k">' + (state.hasNext ? "読み込み済み" : "作品数") + "</div>" +
-      '<div class="v">' + list.length + "<small> 件" +
-      (state.hasNext ? "" : "（全件）") + "</small></div></div>" +
-    '<div class="stat"><div class="k">平均スコア</div><div class="v">' + avg + "</div></div>" +
-    '<div class="stat"><div class="k">放送中</div><div class="v">' + airing + "<small> 本</small></div></div>" +
-    '<div class="stat"><div class="k">ジャンル上位</div>' +
+    '<div class="stat"><div class="k">' + (state.hasNext ? t("sum.loaded") : t("sum.count")) + "</div>" +
+      '<div class="v">' + list.length + "<small>" + t("unitWorks") +
+      (state.hasNext ? "" : t("allSuffix")) + "</small></div></div>" +
+    '<div class="stat"><div class="k">' + t("sum.avg") + '</div><div class="v">' + avg + "</div></div>" +
+    '<div class="stat"><div class="k">' + t("sum.airing") + '</div><div class="v">' + airing +
+      "<small>" + t("unitShows") + "</small></div></div>" +
+    '<div class="stat"><div class="k">' + t("sum.genre") + "</div>" +
       bars(topCount(list, function(m){ return m.genres; })) + "</div>" +
-    '<div class="stat"><div class="k">制作会社上位</div>' +
+    '<div class="stat"><div class="k">' + t("sum.studio") + "</div>" +
       bars(topCount(list, function(m){ return studios(m); })) + "</div>" +
-    '<div class="stat"><div class="k">原作</div>' +
-      bars(topCount(list, function(m){ return m.source ? [SOURCES[m.source] || m.source] : []; })) + "</div>";
+    '<div class="stat"><div class="k">' + t("sum.source") + "</div>" +
+      bars(topCount(list, function(m){ return m.source ? [sourceName(m.source)] : []; })) + "</div>";
   el("summary").hidden = false;
 }
 
 /* ---------- 曜日表（今週の放送予定） ---------- */
-var WEEK = ["日","月","火","水","木","金","土"];
+var WEEK_JA = ["日","月","火","水","木","金","土"];
+function weekName(i){ return lang === "ja" ? WEEK_JA[i] : WEEK_EN[i]; }
 var SHORT_FORMATS = ["TV_SHORT", "MUSIC", "SPECIAL", "OVA"];
 var cal = {rows: [], byId: {}, loading: false, loaded: false, err: ""};
 
@@ -737,12 +926,12 @@ function renderCalendar(){
   hidePreview();
   var box = el("cal");
   if (cal.loading && !cal.rows.length){
-    box.innerHTML = '<div class="msg" style="grid-column:1/-1">放送予定を取得中…</div>';
+    box.innerHTML = '<div class="msg" style="grid-column:1/-1">' + t("calLoading") + "</div>";
     return;
   }
   if (cal.err){
     box.innerHTML = '<div class="msg err" style="grid-column:1/-1">' + esc(cal.err) +
-      '<button id="calRetry">再試行</button></div>';
+      '<button id="calRetry">' + t("retry") + "</button></div>";
     el("calRetry").onclick = refresh;
     return;
   }
@@ -772,28 +961,28 @@ function renderCalendar(){
       var m = r.m;
       var img = m.coverImage && m.coverImage.medium
         ? '<img loading="lazy" src="' + esc(m.coverImage.medium) + '" alt="">' : "";
-      var sc = m.averageScore ? " ・ " + (m.averageScore / 10).toFixed(1) : "";
+      var sc = m.averageScore ? (lang === "ja" ? " ・ " : " · ") + (m.averageScore / 10).toFixed(1) : "";
       var star = favs[m.id] ? '<span class="fv">★</span>' : "";
       return '<div class="slot" data-id="' + m.id + '">' + img +
         '<div class="info"><div class="t">' + airTime(r.at) + star + "</div>" +
         '<div class="n">' + esc(title(m)) + "</div>" +
-        '<div class="e">第' + r.ep + "話" + sc + "</div></div></div>";
+        '<div class="e">' + t("epNo", {n: r.ep}) + sc + "</div></div></div>";
     }).join("");
     return '<section class="day' + (dayKey(o.d) === todayKey ? " today" : "") + '">' +
-      "<h4>" + WEEK[o.d.getDay()] + "<small>" + (o.d.getMonth() + 1) + "/" + o.d.getDate() + "</small>" +
+      "<h4>" + weekName(o.d.getDay()) + "<small>" + (o.d.getMonth() + 1) + "/" + o.d.getDate() + "</small>" +
       "<b>" + o.rows.length + "</b></h4>" +
-      (slots || '<div class="none">放送なし</div>') + "</section>";
+      (slots || '<div class="none">' + t("noAir") + "</div>") + "</section>";
   }).join("") +
-  '<p class="calnote">' + rangeLabel(start) + (cal.loading ? "（読み込み中…）" : "") +
-  "　表示 " + shown + " 本 / 取得 " + cal.rows.length + " 本" +
-  (shown === 0 && el("calFav").checked && !cal.loading
-    ? "　お気に入りに登録した作品は今週の放送予定にありません。" : "") +
-  "　深夜帯は24時制で表示しています（25:30 = 翌1:30）。時刻は端末のタイムゾーン基準です。</p>";
+  '<p class="calnote">' + rangeLabel(start) + (cal.loading ? t("calLoadingSuffix") : "") +
+  t("calShown", {n: shown, m: cal.rows.length}) +
+  (shown === 0 && el("calFav").checked && !cal.loading ? t("calFavNone") : "") +
+  t("calNote") + "</p>";
 }
 function rangeLabel(start){
   var end = new Date(start.getTime());
   end.setDate(end.getDate() + 6);
-  return (start.getMonth() + 1) + "/" + start.getDate() + " 〜 " + (end.getMonth() + 1) + "/" + end.getDate() + " の放送予定";
+  return t("calRange", {a: (start.getMonth() + 1) + "/" + start.getDate(),
+                        b: (end.getMonth() + 1) + "/" + end.getDate()});
 }
 
 /* ---------- 日本語のあらすじ（日本語版Wikipediaの導入部） ---------- */
@@ -868,15 +1057,19 @@ function renderDesc(){
   var box = el("desc");
   if (!box) return;
   var showJa = curDesc.ja && !curDesc.forceEn;
-  var body = showJa ? curDesc.ja : (curDesc.en || "あらすじは登録されていません。");
+  var body = showJa ? curDesc.ja : (curDesc.en || t("noDesc"));
   var src = "";
+  var ccUrl = "https://creativecommons.org/licenses/by-sa/4.0/" + (lang === "ja" ? "deed.ja" : "");
   if (curDesc.ja){
     src = showJa
-      ? '<p class="src"><span>出典: <a href="' + esc(curDesc.url) + '" target="_blank" rel="noopener">ウィキペディア日本語版「' + esc(curDesc.wtitle) + '」</a>（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>）</span>' +
-        (curDesc.en ? '<button id="descToggle">英語の原文</button>' : "") + "</p>"
-      : '<p class="src"><span>出典: AniList（英語）</span><button id="descToggle">日本語の概要</button></p>';
+      ? '<p class="src"><span>' + t("srcWiki") + ' <a href="' + esc(curDesc.url) +
+        '" target="_blank" rel="noopener">' + esc(curDesc.wtitle) + '</a> (<a href="' + ccUrl +
+        '" target="_blank" rel="noopener">CC BY-SA 4.0</a>)</span>' +
+        (curDesc.en ? '<button id="descToggle">' + t("showEn") + "</button>" : "") + "</p>"
+      : '<p class="src"><span>' + t("srcAni") + '</span><button id="descToggle">' +
+        t("showJa") + "</button></p>";
   } else if (curDesc.loading){
-    src = '<p class="src"><span>日本語の概要を検索中…</span></p>';
+    src = '<p class="src"><span>' + t("wikiSearching") + "</span></p>";
   }
   box.innerHTML = esc(body) + src;
   var b = el("descToggle");
@@ -890,7 +1083,7 @@ function plain(desc){
     .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").trim();
 }
 function ymd(d){
-  if (!d || !d.year) return "—";
+  if (!d || !d.year) return t("dash");
   return d.year + "/" + (d.month || "?") + "/" + (d.day || "?");
 }
 /* ---------- ホバープレビュー ---------- */
@@ -902,14 +1095,14 @@ function previewHtml(m){
   var img = m.bannerImage || (m.coverImage && m.coverImage.large) || "";
   var sc = m.averageScore ? '<span class="pv-sc">★ ' + (m.averageScore / 10).toFixed(1) + "</span>" : "";
   var gen = (m.genres || []).slice(0, 3).map(function(g){
-    return '<span class="tag">' + esc(GENRES[g] || g) + "</span>";
+    return '<span class="tag">' + esc(genreName(g)) + "</span>";
   }).join("");
   var next = "";
   if (m.nextAiringEpisode){
     var nd = new Date(m.nextAiringEpisode.airingAt * 1000);
     if (nd.getHours() < 5) nd.setDate(nd.getDate() - 1);
-    next = '<div class="pv-next">次回 第' + m.nextAiringEpisode.episode + "話 " +
-      (nd.getMonth() + 1) + "/" + nd.getDate() + "(" + WEEK[nd.getDay()] + ") " +
+    next = '<div class="pv-next">' + t("nextEp", {n: m.nextAiringEpisode.episode}) + " " +
+      (nd.getMonth() + 1) + "/" + nd.getDate() + "(" + weekName(nd.getDay()) + ") " +
       airTime(m.nextAiringEpisode.airingAt) + "</div>";
   }
   return (img ? '<img class="pv-img" src="' + esc(img) + '" alt="">' : "") +
@@ -971,7 +1164,7 @@ function renderFavBtn(id){
   var b = el("favBtn");
   if (!b) return;
   var on = !!favs[id];
-  b.textContent = on ? "★ 登録済み" : "☆ お気に入り";
+  b.textContent = on ? t("favOn") : t("favOff");
   b.className = "close" + (on ? " on" : "");
 }
 function openDetail(id){
@@ -987,13 +1180,13 @@ function openDetail(id){
   if (m.nextAiringEpisode){
     var nd = new Date(m.nextAiringEpisode.airingAt * 1000);
     if (nd.getHours() < 5) nd.setDate(nd.getDate() - 1);   /* 曜日表と同じ「朝5時始まり」 */
-    next = "第" + m.nextAiringEpisode.episode + "話 " +
-      (nd.getMonth() + 1) + "/" + nd.getDate() + "(" + WEEK[nd.getDay()] + ") " +
+    next = t("epNo", {n: m.nextAiringEpisode.episode}) + " " +
+      (nd.getMonth() + 1) + "/" + nd.getDate() + "(" + weekName(nd.getDay()) + ") " +
       airTime(m.nextAiringEpisode.airingAt);
   }
   el("sheet").innerHTML =
     (m.bannerImage ? '<div class="banner" style="background-image:url(' + esc(m.bannerImage) + ')"></div>' : "") +
-    '<div class="inner"><button class="close" id="closeBtn">閉じる</button>' +
+    '<div class="inner"><button class="close" id="closeBtn">' + t("close") + "</button>" +
     '<button class="close" id="favBtn" style="margin-right:8px"></button>' +
     "<h3>" + esc(title(m)) + "</h3>" +
     '<p class="nat">' + esc(m.title.romaji || "") +
@@ -1001,19 +1194,22 @@ function openDetail(id){
     '<div class="cols">' +
       (m.coverImage ? '<img class="cover" src="' + esc(m.coverImage.large) + '" alt="">' : "") +
       '<div class="meta"><dl>' +
-      "<dt>放送</dt><dd>" + (m.seasonYear || "—") + (m.season ? " " + SEASONS[m.season] : "") +
-        "（" + ymd(m.startDate) + " 〜 " + ymd(m.endDate) + "）</dd>" +
-      "<dt>状態</dt><dd>" + (STATUS[m.status] || "—") + "</dd>" +
-      "<dt>次回放送</dt><dd>" + next + "</dd>" +
-      "<dt>形式</dt><dd>" + (FORMATS[m.format] || "—") +
-        (m.episodes ? " / 全" + m.episodes + "話" : "") +
-        (m.duration ? " / " + m.duration + "分" : "") + "</dd>" +
-      "<dt>制作</dt><dd>" + esc(studios(m).join("、") || "—") + "</dd>" +
-      "<dt>原作</dt><dd>" + esc(SOURCES[m.source] || m.source || "—") + "</dd>" +
-      "<dt>スコア</dt><dd>" + (m.averageScore ? (m.averageScore / 10).toFixed(1) + " / 10" : "—") +
-        "（人気度 " + (m.popularity || 0).toLocaleString() + "）</dd>" +
-      "<dt>ジャンル</dt><dd>" + esc((m.genres || []).map(function(g){ return GENRES[g] || g; }).join("、") || "—") + "</dd>" +
-      "<dt>配信</dt><dd>" + svcDetail(m) + "</dd>" +
+      "<dt>" + t("d.air") + "</dt><dd>" + (m.seasonYear || t("dash")) +
+        (m.season ? " " + seasonName(m.season) : "") +
+        " (" + ymd(m.startDate) + " – " + ymd(m.endDate) + ")</dd>" +
+      "<dt>" + t("d.status") + "</dt><dd>" + (statusName(m.status) || t("dash")) + "</dd>" +
+      "<dt>" + t("d.next") + "</dt><dd>" + next + "</dd>" +
+      "<dt>" + t("d.format") + "</dt><dd>" + (formatName(m.format) || t("dash")) +
+        (m.episodes ? t("d.eps", {n: m.episodes}) : "") +
+        (m.duration ? t("d.min", {n: m.duration}) : "") + "</dd>" +
+      "<dt>" + t("d.studio") + "</dt><dd>" + esc(studios(m).join(sep()) || t("dash")) + "</dd>" +
+      "<dt>" + t("d.source") + "</dt><dd>" + esc(sourceName(m.source) || t("dash")) + "</dd>" +
+      "<dt>" + t("d.score") + "</dt><dd>" +
+        (m.averageScore ? (m.averageScore / 10).toFixed(1) + " / 10" : t("dash")) +
+        " (" + t("popularity") + " " + (m.popularity || 0).toLocaleString() + ")</dd>" +
+      "<dt>" + t("d.genre") + "</dt><dd>" +
+        esc((m.genres || []).map(genreName).join(sep()) || t("dash")) + "</dd>" +
+      "<dt>" + t("d.stream") + "</dt><dd>" + svcDetail(m) + "</dd>" +
       "</dl>" +
       '<div class="links">' + trailer +
         '<a href="' + esc(m.siteUrl) + '" target="_blank" rel="noopener">AniList</a>' + links + "</div>" +
@@ -1024,7 +1220,8 @@ function openDetail(id){
   renderFavBtn(m.id);
   el("favBtn").onclick = function(){ toggleFav(m.id); };
 
-  curDesc = {id: m.id, en: plain(m.description), ja: "", loading: true, forceEn: false};
+  /* 英語表示のときはAniListの英文をそのまま出し、日本語の概要は切り替えで見せる */
+  curDesc = {id: m.id, en: plain(m.description), ja: "", loading: true, forceEn: lang === "en"};
   renderDesc();
   loadWiki(m).then(function(w){
     if (curDesc.id !== m.id) return;          /* 別の作品に切り替わっていたら破棄 */
@@ -1053,13 +1250,24 @@ function renderFavCount(){
   el("favCount").textContent = n ? "(" + n + ")" : "";
 }
 
-(function initSelects(){
-  var y = el("year"), html = '<option value="">指定なし</option>';
-  for (var v = CUR.year + 1; v >= 1960; v--) html += '<option value="' + v + '">' + v + "年</option>";
+function fillYearSelect(){
+  var y = el("year"), cur = y.value;
+  var html = '<option value="">' + t("none") + "</option>";
+  for (var v = CUR.year + 1; v >= 1960; v--){
+    html += '<option value="' + v + '">' + v + (lang === "ja" ? "年" : "") + "</option>";
+  }
   y.innerHTML = html;
-  el("genre").innerHTML = '<option value="">すべて</option>' +
-    Object.keys(GENRES).map(function(k){ return '<option value="' + k + '">' + GENRES[k] + "</option>"; }).join("");
-})();
+  y.value = cur;
+}
+function fillGenreSelect(){
+  var g = el("genre"), cur = g.value;
+  g.innerHTML = '<option value="">' + t("any") + "</option>" +
+    Object.keys(GENRES).map(function(k){
+      return '<option value="' + k + '">' + esc(genreName(k)) + "</option>";
+    }).join("");
+  g.value = cur;
+  fillYearSelect();
+}
 
 function syncForm(){
   el("year").value = state.year || "";
@@ -1090,6 +1298,7 @@ function validOpt(id, v){
 function buildQuery(){
   var p = [];
   function add(k, v){ if (v) p.push(k + "=" + encodeURIComponent(v)); }
+  add("lang", lang);
   if (state.view !== "list") add("view", state.view);
   var q = state.q.trim();
   add("q", q);
@@ -1108,6 +1317,8 @@ function buildQuery(){
 }
 function applyQuery(search){
   var u = new URLSearchParams(search || "");
+  var l = u.get("lang");
+  if (l === "ja" || l === "en") lang = l;
   state.q = u.get("q") || "";
   state.year = u.has("year") ? (u.get("year") || "") : CUR.year;
   state.season = u.has("season") ? validOpt("season", u.get("season")) : CUR.season;
@@ -1160,7 +1371,7 @@ el("q").addEventListener("keydown", function(e){ if (e.key === "Enter") el("appl
 el("reload").onclick = refresh;
 window.addEventListener("online", function(){ if (!el("notice").hidden) refresh(); });
 window.addEventListener("offline", function(){
-  showNotice("オフラインになりました。表示中のデータは最後に取得した内容です。");
+  showNotice(t("offline"));
 });
 el("tabList").onclick = function(){ setView("list"); syncUrl(true); };
 el("tabFav").onclick = function(){ setView("fav"); syncUrl(true); };
@@ -1209,12 +1420,28 @@ if (autoLoadOn){
   }, {rootMargin: "300px"}).observe(el("more"));
 }
 
+function setLang(next){
+  lang = next;
+  try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
+  applyLang();
+  syncUrl(false);
+  /* 言語で表示名が変わるため、描画済みの内容を作り直す */
+  renderGrid();
+  renderMore();
+  if (state.view === "list") renderSummary();
+  if (cal.rows.length) renderCalendar();
+  if (el("modal").classList.contains("open") && curDesc.id) openDetail(curDesc.id);
+}
+el("langBtn").onclick = function(){ setLang(lang === "ja" ? "en" : "ja"); };
+
 loadStreaming();
 bindPreview("grid", ".card");
 bindPreview("cal", ".slot");
 window.addEventListener("scroll", hidePreview, {passive: true});
 
+lang = detectLang();
 var initView = applyQuery(location.search);
+applyLang();
 syncForm();
 renderFavCount();
 reset();

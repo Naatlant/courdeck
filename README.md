@@ -12,9 +12,10 @@ trackers — **where each title is actually streaming in Japan**.
 No build step, no framework, no API key required for visitors. The app itself is one HTML
 file you can open in a browser.
 
-> **Note**: the user interface is in Japanese. The streaming availability is Japan-only,
-> which is the point — services like dAnime, U-NEXT and FOD rarely show up in
-> international anime databases.
+> **Note**: the interface is available in **English and Japanese** (toggle in the top-right,
+> or add `?lang=en` / `?lang=ja` to the URL). Streaming availability is Japan-only, which
+> is the point — services like dAnime, U-NEXT and FOD rarely show up in international anime
+> databases.
 
 ## Features
 
@@ -32,6 +33,7 @@ file you can open in a browser.
 | **Shareable URLs** | Filters and the active tab live in the query string, so any view can be bookmarked, shared, and navigated with the browser's back button |
 | Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
 | Offline tolerance | Falls back to the most recent cached response and tells you how old it is |
+| **English / Japanese** | Switch languages at any time. Titles, genres, formats and dates all follow the choice, and the setting is remembered and carried in the URL |
 
 Responsive down to phone width, and follows the OS light/dark preference.
 
