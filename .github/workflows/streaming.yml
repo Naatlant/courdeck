@@ -2,8 +2,14 @@ name: 配信情報の更新
 
 on:
   schedule:
-    - cron: "0 18 * * *"      # 毎日 03:00 JST（UTC 18:00）
-  workflow_dispatch:           # 手動実行も可能
+    - cron: "0 18 * * *"       # 毎日 03:00 JST … 前季〜来季＋歴代トップのみ更新
+    - cron: "30 18 * * 0"      # 日曜 03:30 JST … 全作品を再取得
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "all を指定すると全作品を再取得する（既定は今季周辺のみ）"
+        required: false
+        default: "season"
 
 permissions:
   contents: write
@@ -15,6 +21,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +32,9 @@ jobs:
       - name: 配信情報を取得
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-        run: node scripts/fetch-streaming.mjs
+        run: >
+          node scripts/fetch-streaming.mjs
+          ${{ (github.event.inputs.mode == 'all' || github.event.schedule == '30 18 * * 0') && '--all' || '' }}
 
       - name: 変更があればコミット
         run: |
