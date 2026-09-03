@@ -108,6 +108,21 @@
   .msg.err{color:var(--danger)}
   .msg button{margin-top:10px;display:block;margin-left:auto;margin-right:auto}
   #more{display:flex;justify-content:center;padding:18px}
+  /* ホバープレビュー */
+  .preview{position:fixed;z-index:40;left:0;top:0;background:var(--panel);
+    border:1px solid var(--accent);border-radius:12px;overflow:hidden;
+    box-shadow:0 16px 44px rgba(0,0,0,.38);pointer-events:none;
+    opacity:0;transform:scale(.93);transition:opacity .16s ease,transform .16s ease}
+  .preview.show{opacity:1;transform:scale(1)}
+  .preview .pv-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--row)}
+  .preview .pv-body{padding:10px 12px 12px}
+  .preview .pv-ttl{font-size:13.5px;font-weight:600;line-height:1.4}
+  .preview .pv-meta{font-size:11px;color:var(--muted);margin:3px 0 6px}
+  .preview .pv-sc{font-size:11px;font-weight:600;color:var(--ok);margin-right:6px;
+    font-variant-numeric:tabular-nums}
+  .preview .pv-next{font-size:11px;color:var(--accent);margin-top:7px}
+  .preview .pv-fv{color:#e0a800}
+  @media (hover: none), (max-width:700px){ .preview{display:none} }
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:50;
     padding:24px;overflow:auto}
   .modal.open{display:block}
@@ -509,6 +524,7 @@ function currentList(){
 }
 
 function renderGrid(){
+  hidePreview();
   var list = currentList();
   el("grid").innerHTML = list.map(function(m){
     var on = favs[m.id] ? " on" : "";
@@ -652,6 +668,7 @@ function airTime(at){
 }
 
 function renderCalendar(){
+  hidePreview();
   var box = el("cal");
   if (cal.loading && !cal.rows.length){
     box.innerHTML = '<div class="msg" style="grid-column:1/-1">放送予定を取得中…</div>';
@@ -810,6 +827,75 @@ function ymd(d){
   if (!d || !d.year) return "—";
   return d.year + "/" + (d.month || "?") + "/" + (d.day || "?");
 }
+/* ---------- ホバープレビュー ---------- */
+var HOVER_DELAY = 380;
+var hoverOn = !window.matchMedia || window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+var pvEl = null, pvTimer = null, pvTarget = null;
+
+function previewHtml(m){
+  var img = m.bannerImage || (m.coverImage && m.coverImage.large) || "";
+  var sc = m.averageScore ? '<span class="pv-sc">★ ' + (m.averageScore / 10).toFixed(1) + "</span>" : "";
+  var gen = (m.genres || []).slice(0, 3).map(function(g){
+    return '<span class="tag">' + esc(GENRES[g] || g) + "</span>";
+  }).join("");
+  var next = "";
+  if (m.nextAiringEpisode){
+    var nd = new Date(m.nextAiringEpisode.airingAt * 1000);
+    if (nd.getHours() < 5) nd.setDate(nd.getDate() - 1);
+    next = '<div class="pv-next">次回 第' + m.nextAiringEpisode.episode + "話 " +
+      (nd.getMonth() + 1) + "/" + nd.getDate() + "(" + WEEK[nd.getDay()] + ") " +
+      airTime(m.nextAiringEpisode.airingAt) + "</div>";
+  }
+  return (img ? '<img class="pv-img" src="' + esc(img) + '" alt="">' : "") +
+    '<div class="pv-body"><div class="pv-ttl">' + esc(title(m)) +
+      (favs[m.id] ? ' <span class="pv-fv">★</span>' : "") + "</div>" +
+    '<div class="pv-meta">' + esc(subtitle(m)) + "</div>" +
+    "<div>" + sc + statusTag(m) + gen + "</div>" + next + "</div>";
+}
+function showPreview(anchor, m){
+  if (!pvEl){
+    pvEl = document.createElement("div");
+    pvEl.className = "preview";
+    document.body.appendChild(pvEl);
+  }
+  pvEl.innerHTML = previewHtml(m);
+  var r = anchor.getBoundingClientRect();
+  var w = Math.min(Math.max(r.width * 1.5, 300), 380);
+  pvEl.style.width = w + "px";
+  var h = pvEl.offsetHeight;                 /* 表示前に高さを確定させる */
+  var left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
+  var top = Math.max(8, Math.min(r.top + r.height / 2 - h / 2, window.innerHeight - h - 8));
+  pvEl.style.left = left + "px";
+  pvEl.style.top = top + "px";
+  pvEl.classList.add("show");
+}
+function hidePreview(){
+  clearTimeout(pvTimer);
+  pvTarget = null;
+  if (pvEl) pvEl.classList.remove("show");
+}
+function bindPreview(rootId, selector){
+  var root = el(rootId);
+  root.addEventListener("mouseover", function(e){
+    if (!hoverOn) return;
+    var t = e.target.closest(selector);
+    if (!t || t === pvTarget) return;
+    pvTarget = t;
+    clearTimeout(pvTimer);
+    pvTimer = setTimeout(function(){
+      if (pvTarget !== t || !document.body.contains(t)) return;
+      var m = findMedia(Number(t.dataset.id));
+      if (m) showPreview(t, m);
+    }, HOVER_DELAY);
+  });
+  root.addEventListener("mouseout", function(e){
+    var t = e.target.closest(selector);
+    if (!t) return;
+    if (e.relatedTarget && t.contains(e.relatedTarget)) return;   /* 同じ要素の中の移動は無視 */
+    hidePreview();
+  });
+}
+
 function findMedia(id){
   var list = currentList();
   for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
@@ -825,6 +911,7 @@ function renderFavBtn(id){
 function openDetail(id){
   var m = findMedia(id);
   if (!m) return;
+  hidePreview();
   var trailer = m.trailer && m.trailer.site === "youtube"
     ? '<a href="https://www.youtube.com/watch?v=' + esc(m.trailer.id) + '" target="_blank" rel="noopener">PV</a>' : "";
   var links = (m.externalLinks || []).slice(0, 8).map(function(l){
@@ -1054,6 +1141,10 @@ if (autoLoadOn){
     if (entries[0].isIntersecting) checkAutoLoad();
   }, {rootMargin: "300px"}).observe(el("more"));
 }
+
+bindPreview("grid", ".card");
+bindPreview("cal", ".slot");
+window.addEventListener("scroll", hidePreview, {passive: true});
 
 var initView = applyQuery(location.search);
 syncForm();
