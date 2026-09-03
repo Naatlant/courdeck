@@ -77,6 +77,10 @@
   .tag.air{background:transparent;border:1px solid var(--ok);color:var(--ok)}
   .tag.pre{background:transparent;border:1px solid var(--warn);color:var(--warn)}
   .tag.end{background:transparent;border:1px solid var(--border);color:var(--muted)}
+  .svc{display:inline-block;font-size:9.5px;line-height:1.5;padding:0 5px;border-radius:3px;
+    border:1px solid var(--border);color:var(--muted);margin:3px 3px 0 0;white-space:nowrap}
+  .svc.more{border-style:dashed}
+  .card .svcs{margin-top:2px}
   .calbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
   .calbar label{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--text)}
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
@@ -162,7 +166,9 @@
 <body>
 <div class="wrap">
   <h1>アニメまとめ</h1>
-  <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。データ提供: anilist.co</p>
+  <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。作品情報: anilist.co ／
+    国内の配信情報: <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>・JustWatch（1日1回更新）<br>
+    This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
 
   <div class="panel" id="searchPanel">
     <div class="presets">
@@ -290,6 +296,45 @@ MEDIA_FIELDS,
 "    }",
 "  }",
 "}"].join("\n");
+
+/* ---------- 日本国内の配信情報（GitHub Actions が日次で生成） ---------- */
+var stream = null;
+function loadStreaming(){
+  fetch("data/streaming.json", {cache: "no-cache"})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (!j || !j.titles) return;
+      stream = j;
+      if (state.items.length || state.view === "fav") renderGrid();
+      if (cal.rows.length) renderCalendar();
+    })
+    .catch(function(){ /* 取得できなければ配信情報は出さない */ });
+}
+function svcOf(id){
+  if (!stream) return null;
+  var e = stream.titles[id];
+  if (!e) return null;
+  return {
+    names: e.p.map(function(i){ return stream.names[i]; }),
+    link: e.t ? "https://www.themoviedb.org/" + e.t + "/watch?locale=JP" : ""
+  };
+}
+function svcDetail(id){
+  if (!stream) return "—";
+  var s = svcOf(id);
+  if (!s || !s.names.length) return "情報なし";
+  return s.names.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
+    (s.link ? ' <a href="' + esc(s.link) + '" target="_blank" rel="noopener" style="font-size:11px">配信一覧</a>' : "");
+}
+function svcTags(id, max){
+  var s = svcOf(id);
+  if (!s || !s.names.length) return "";
+  var shown = s.names.slice(0, max);
+  var rest = s.names.length - shown.length;
+  return '<div class="svcs">' +
+    shown.map(function(n){ return '<span class="svc">' + esc(n) + "</span>"; }).join("") +
+    (rest > 0 ? '<span class="svc more">+' + rest + "</span>" : "") + "</div>";
+}
 
 var GENRES = {
   "Action":"アクション","Adventure":"冒険","Comedy":"コメディ","Drama":"ドラマ","Ecchi":"エッチ",
@@ -539,7 +584,7 @@ function renderGrid(){
       '<button class="fav' + on + '" data-fav="' + m.id + '" title="お気に入り">★</button></div>' +
       '<div class="body"><div class="ttl">' + esc(title(m)) + "</div>" +
       '<div class="sub">' + esc(subtitle(m)) + "</div>" +
-      "<div>" + statusTag(m) + gen + "</div></div></article>";
+      "<div>" + statusTag(m) + gen + "</div>" + svcTags(m.id, 2) + "</div></article>";
   }).join("");
   if (!list.length && !state.loading){
     msg(state.view === "fav" ? "お気に入りはまだありません。カードの★で追加できます。" : "該当する作品がありません。");
@@ -850,7 +895,7 @@ function previewHtml(m){
     '<div class="pv-body"><div class="pv-ttl">' + esc(title(m)) +
       (favs[m.id] ? ' <span class="pv-fv">★</span>' : "") + "</div>" +
     '<div class="pv-meta">' + esc(subtitle(m)) + "</div>" +
-    "<div>" + sc + statusTag(m) + gen + "</div>" + next + "</div>";
+    "<div>" + sc + statusTag(m) + gen + "</div>" + svcTags(m.id, 5) + next + "</div>";
 }
 function showPreview(anchor, m){
   if (!pvEl){
@@ -947,6 +992,7 @@ function openDetail(id){
       "<dt>スコア</dt><dd>" + (m.averageScore ? (m.averageScore / 10).toFixed(1) + " / 10" : "—") +
         "（人気度 " + (m.popularity || 0).toLocaleString() + "）</dd>" +
       "<dt>ジャンル</dt><dd>" + esc((m.genres || []).map(function(g){ return GENRES[g] || g; }).join("、") || "—") + "</dd>" +
+      "<dt>配信</dt><dd>" + svcDetail(m.id) + "</dd>" +
       "</dl>" +
       '<div class="links">' + trailer +
         '<a href="' + esc(m.siteUrl) + '" target="_blank" rel="noopener">AniList</a>' + links + "</div>" +
@@ -1142,6 +1188,7 @@ if (autoLoadOn){
   }, {rootMargin: "300px"}).observe(el("more"));
 }
 
+loadStreaming();
 bindPreview("grid", ".card");
 bindPreview("cal", ".slot");
 window.addEventListener("scroll", hidePreview, {passive: true});
