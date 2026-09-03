@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アニメまとめ</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --border:#dfe3e8; --text:#1c2024;
+    --muted:#6b7280; --accent:#2563eb; --accent-weak:#eaf0fe;
+    --danger:#c0392b; --ok:#127c4a; --warn:#a86612; --row:#fafbfc;
+    --shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15181c; --panel:#1d2126; --border:#333a42; --text:#e6e8ea;
+      --muted:#9aa3ad; --accent:#5b8dee; --accent-weak:#22304a;
+      --danger:#e06c5c; --ok:#4cc38a; --warn:#e0a95c; --row:#21262c; --shadow:none;
+    }
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;padding:20px 20px 80px;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI","Yu Gothic UI","Hiragino Kaku Gothic ProN",Meiryo,system-ui,sans-serif;
+    font-size:14px;line-height:1.6;}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 4px;font-weight:600;letter-spacing:.02em}
+  .lead{font-size:12px;color:var(--muted);margin:0 0 16px}
+  h2{font-size:12px;margin:0 0 12px;font-weight:600;color:var(--muted);letter-spacing:.08em}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;margin-bottom:16px;box-shadow:var(--shadow)}
+  button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);
+    border-radius:6px;padding:6px 12px;cursor:pointer}
+  button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover:not(:disabled){opacity:.88;color:#fff}
+  button.on{background:var(--accent-weak);border-color:var(--accent);color:var(--accent)}
+  input,select{font:inherit;color:var(--text);background:var(--panel);
+    border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+  input:focus,select:focus{outline:2px solid var(--accent-weak);border-color:var(--accent)}
+  label.f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--muted)}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .mobonly{display:none}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .filters .grow{flex:1;min-width:180px}
+  .filters .grow input{width:100%}
+  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .stat .k{font-size:11px;color:var(--muted);letter-spacing:.06em}
+  .stat .v{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.25}
+  .stat .v small{font-size:12px;font-weight:400;color:var(--muted)}
+  .bars{margin-top:4px}
+  .bar{display:grid;grid-template-columns:86px 1fr 30px;gap:8px;align-items:center;font-size:11px;
+    color:var(--muted);margin-bottom:3px}
+  .bar i{display:block;height:6px;border-radius:3px;background:var(--accent);opacity:.75}
+  .bar b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+  .bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer}
+  .card:hover{border-color:var(--accent)}
+  .card .thumb{position:relative;aspect-ratio:2/3;background:var(--row)}
+  .card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .card .score{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.72);color:#fff;
+    font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;font-variant-numeric:tabular-nums}
+  .card .fav{position:absolute;right:4px;top:4px;background:rgba(0,0,0,.55);border:none;color:#fff;
+    padding:3px 7px;border-radius:5px;font-size:13px;line-height:1}
+  .card .fav:hover{color:#ffcf4d;border:none}
+  .card .fav.on{color:#ffcf4d}
+  .card .body{padding:8px 10px 10px;display:flex;flex-direction:column;gap:4px;flex:1}
+  .card .ttl{font-size:13px;font-weight:600;line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;
+    background:var(--accent-weak);color:var(--accent);margin-right:4px}
+  .tag.air{background:transparent;border:1px solid var(--ok);color:var(--ok)}
+  .tag.pre{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+  .tag.end{background:transparent;border:1px solid var(--border);color:var(--muted)}
+  .calbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .calbar label{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--text)}
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
+  .day{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:8px;box-shadow:var(--shadow);min-width:0}
+  .day.today{border-color:var(--accent)}
+  .day h4{margin:0 0 6px;font-size:12px;font-weight:600;display:flex;gap:5px;align-items:baseline;
+    padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .day h4 small{color:var(--muted);font-weight:400}
+  .day h4 b{margin-left:auto;color:var(--muted);font-weight:400;font-size:11px}
+  .day.today h4{color:var(--accent)}
+  .day .none{font-size:11px;color:var(--muted);padding:6px 4px}
+  .slot{display:flex;gap:6px;padding:5px 4px;border-radius:6px;cursor:pointer;align-items:flex-start}
+  .slot:hover{background:var(--row)}
+  .slot img{width:30px;height:42px;object-fit:cover;border-radius:3px;flex:none;background:var(--row)}
+  .slot .info{min-width:0;flex:1}
+  .slot .t{font-size:11px;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
+  .slot .n{font-size:11.5px;line-height:1.35;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .slot .e{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .calnote{font-size:11px;color:var(--muted);margin:12px 2px 0;grid-column:1/-1}
+  @media(max-width:900px){ .cal{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  .notice{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;
+    background:var(--panel);border:1px solid var(--warn);color:var(--warn);
+    border-radius:8px;padding:8px 12px;margin-bottom:12px}
+  .notice button{padding:3px 10px;font-size:12px}
+  .msg{padding:24px 8px;text-align:center;color:var(--muted);font-size:13px}
+  .msg.err{color:var(--danger)}
+  .msg button{margin-top:10px;display:block;margin-left:auto;margin-right:auto}
+  #more{display:flex;justify-content:center;padding:18px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:50;
+    padding:24px;overflow:auto}
+  .modal.open{display:block}
+  .sheet{max-width:760px;margin:0 auto;background:var(--panel);border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+  .sheet .banner{height:150px;background:var(--row) center/cover no-repeat}
+  .sheet .inner{padding:16px 20px 22px}
+  .sheet h3{margin:0 0 2px;font-size:18px}
+  .sheet .nat{font-size:12px;color:var(--muted);margin:0 0 12px}
+  .sheet .cols{display:flex;gap:16px;flex-wrap:wrap}
+  .sheet .cover{width:150px;height:auto;border-radius:8px;border:1px solid var(--border)}
+  .sheet .meta{flex:1;min-width:240px}
+  .sheet dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:0;font-size:12px}
+  .sheet dt{color:var(--muted);white-space:nowrap}
+  .sheet dd{margin:0}
+  .sheet .desc{font-size:12.5px;white-space:pre-wrap;max-height:230px;overflow:auto;
+    border-top:1px solid var(--border);padding-top:10px;margin-top:14px}
+  .sheet .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .sheet .links a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--border);
+    padding:4px 10px;border-radius:6px}
+  .sheet .links a:hover{border-color:var(--accent)}
+  .sheet .close{float:right}
+  @media(max-width:600px){
+    body{padding:14px 12px 70px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    .cal{grid-template-columns:1fr}
+    .mobonly{display:block;width:100%}
+    .filters.collapsed{display:none}
+    .modal{padding:0}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>アニメまとめ</h1>
+  <p class="lead">AniList の公開APIから今季・過去シーズンの作品を自動取得します。データ提供: anilist.co</p>
+
+  <div class="panel" id="searchPanel">
+    <div class="presets">
+      <button data-preset="current">今季</button>
+      <button data-preset="prev">前季</button>
+      <button data-preset="next">来季</button>
+      <button data-preset="airing">放送中の話題作</button>
+      <button data-preset="alltime">歴代トップ</button>
+      <button data-preset="year">今年のベスト</button>
+    </div>
+    <button id="toggleFilters" class="mobonly">詳細な絞り込み ▾</button>
+    <div class="filters collapsed" id="filters">
+      <label class="f">年<select id="year"></select></label>
+      <label class="f">季節<select id="season">
+        <option value="">通年</option>
+        <option value="WINTER">冬 (1-3月)</option>
+        <option value="SPRING">春 (4-6月)</option>
+        <option value="SUMMER">夏 (7-9月)</option>
+        <option value="FALL">秋 (10-12月)</option>
+      </select></label>
+      <label class="f">並び順<select id="sort">
+        <option value="POPULARITY_DESC">人気順</option>
+        <option value="SCORE_DESC">スコア順</option>
+        <option value="TRENDING_DESC">話題順</option>
+        <option value="START_DATE_DESC">放送開始が新しい順</option>
+        <option value="FAVOURITES_DESC">お気に入り数順</option>
+        <option value="TITLE_ROMAJI">タイトル順</option>
+      </select></label>
+      <label class="f">形式<select id="format">
+        <option value="">すべて</option>
+        <option value="TV">TV</option>
+        <option value="TV_SHORT">TV(短編)</option>
+        <option value="MOVIE">劇場版</option>
+        <option value="OVA">OVA</option>
+        <option value="ONA">ONA</option>
+        <option value="SPECIAL">スペシャル</option>
+      </select></label>
+      <label class="f">ジャンル<select id="genre"></select></label>
+      <label class="f">最低スコア<select id="minScore">
+        <option value="">指定なし</option>
+        <option value="60">60以上</option>
+        <option value="70">70以上</option>
+        <option value="75">75以上</option>
+        <option value="80">80以上</option>
+        <option value="85">85以上</option>
+      </select></label>
+      <label class="f grow">キーワード<input id="q" type="search" placeholder="作品名で検索（全期間から）"></label>
+      <button id="apply" class="primary">この条件で取得</button>
+    </div>
+  </div>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="tabs">
+    <button id="tabList" class="on">一覧</button>
+    <button id="tabCal">曜日表</button>
+    <button id="tabFav">お気に入り <span id="favCount"></span></button>
+    <span style="flex:1"></span>
+    <button id="reload" title="キャッシュを使わず最新を取り直す">再取得</button>
+  </div>
+
+  <div class="panel" id="calBar" hidden>
+    <div class="calbar">
+      <label><input type="checkbox" id="calSeason" checked>今季の作品のみ</label>
+      <label><input type="checkbox" id="calNoShort" checked>短編・特番・OVAを除く</label>
+    </div>
+  </div>
+
+  <div class="panel" id="summary" hidden>
+    <h2 id="sumTitle">まとめ</h2>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div id="msg" class="msg">読み込み中…</div>
+  <div class="grid" id="grid"></div>
+  <div class="cal" id="cal" hidden></div>
+  <div id="more"></div>
+</div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+"use strict";
+var API = "https://graphql.anilist.co";
+var PER_PAGE = 50;
+var CACHE_KEY = "animeCache_v1";
+var FAV_KEY = "animeFavs_v1";
+var CACHE_TTL = 6 * 60 * 60 * 1000;
+var CACHE_MAX = 30;
+
+var MEDIA_FIELDS = [
+"      id title{ romaji english native } description(asHtml:false)",
+"      format status episodes duration season seasonYear source isAdult",
+"      averageScore popularity favourites genres",
+"      coverImage{ large medium } bannerImage",
+"      startDate{ year month day } endDate{ year month day }",
+"      studios(isMain:true){ nodes{ name } }",
+"      nextAiringEpisode{ episode airingAt }",
+"      trailer{ id site }",
+"      externalLinks{ site url }",
+"      siteUrl"].join("\n");
+
+var QUERY = [
+"query ($page:Int,$perPage:Int,$season:MediaSeason,$seasonYear:Int,$search:String,",
+"       $sort:[MediaSort],$genre:String,$format:MediaFormat,$scoreGreater:Int,$status:MediaStatus){",
+"  Page(page:$page, perPage:$perPage){",
+"    pageInfo{ currentPage hasNextPage total }",
+"    media(type:ANIME, isAdult:false, season:$season, seasonYear:$seasonYear, search:$search,",
+"          sort:$sort, genre:$genre, format:$format, averageScore_greater:$scoreGreater, status:$status){",
+MEDIA_FIELDS,
+"    }",
+"  }",
+"}"].join("\n");
+
+var SCHEDULE_QUERY = [
+"query ($page:Int,$perPage:Int,$from:Int,$to:Int){",
+"  Page(page:$page, perPage:$perPage){",
+"    pageInfo{ hasNextPage }",
+"    airingSchedules(airingAt_greater:$from, airingAt_lesser:$to, sort:TIME){",
+"      episode airingAt",
+"      media{",
+MEDIA_FIELDS,
+"      }",
+"    }",
+"  }",
+"}"].join("\n");
+
+var GENRES = {
+  "Action":"アクション","Adventure":"冒険","Comedy":"コメディ","Drama":"ドラマ","Ecchi":"エッチ",
+  "Fantasy":"ファンタジー","Horror":"ホラー","Mahou Shoujo":"魔法少女","Mecha":"メカ","Music":"音楽",
+  "Mystery":"ミステリー","Psychological":"心理","Romance":"恋愛","Sci-Fi":"SF","Slice of Life":"日常",
+  "Sports":"スポーツ","Supernatural":"超常","Thriller":"スリラー"
+};
+var FORMATS = {TV:"TV",TV_SHORT:"TV(短編)",MOVIE:"劇場版",OVA:"OVA",ONA:"ONA",SPECIAL:"SP",MUSIC:"MV"};
+var STATUS = {RELEASING:"放送中",FINISHED:"放送終了",NOT_YET_RELEASED:"放送前",CANCELLED:"中止",HIATUS:"休止中"};
+var SEASONS = {WINTER:"冬",SPRING:"春",SUMMER:"夏",FALL:"秋"};
+var SOURCES = {ORIGINAL:"オリジナル",MANGA:"漫画",LIGHT_NOVEL:"ライトノベル",VISUAL_NOVEL:"ビジュアルノベル",
+  VIDEO_GAME:"ゲーム",NOVEL:"小説",OTHER:"その他",DOUJINSHI:"同人",ANIME:"アニメ",WEB_NOVEL:"Web小説",
+  LIVE_ACTION:"実写",GAME:"ゲーム",COMIC:"コミック",MULTIMEDIA_PROJECT:"メディアミックス",PICTURE_BOOK:"絵本"};
+
+function seasonOf(d){
+  return ["WINTER","WINTER","WINTER","SPRING","SPRING","SPRING",
+          "SUMMER","SUMMER","SUMMER","FALL","FALL","FALL"][d.getMonth()];
+}
+function shiftSeason(year, season, dir){
+  var o = ["WINTER","SPRING","SUMMER","FALL"];
+  var i = o.indexOf(season) + dir;
+  if (i < 0) { i = 3; year--; }
+  if (i > 3) { i = 0; year++; }
+  return {year: year, season: o[i]};
+}
+var NOW = new Date();
+var CUR = {year: NOW.getFullYear(), season: seasonOf(NOW)};
+
+var state = {
+  year: CUR.year, season: CUR.season, sort: "POPULARITY_DESC",
+  format: "", genre: "", minScore: "", q: "", status: "",
+  page: 1, hasNext: true, total: 0, items: [], loading: false, view: "list", fresh: false
+};
+var favs = load(FAV_KEY, {});
+
+function load(k, def){ try { return JSON.parse(localStorage.getItem(k)) || def; } catch(e){ return def; } }
+function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+function cacheRaw(key){ return load(CACHE_KEY, {})[key] || null; }
+function cacheGet(key){
+  var e = cacheRaw(key);
+  if (!e || Date.now() - e.t > CACHE_TTL) return null;
+  return e.d;
+}
+function cacheSet(key, data){
+  var c = load(CACHE_KEY, {});
+  c[key] = {t: Date.now(), d: data};
+  var ks = Object.keys(c).sort(function(a,b){ return c[a].t - c[b].t; });
+  while (ks.length > CACHE_MAX) delete c[ks.shift()];
+  /* 容量超過したら古い順に捨てながら書き込みを試みる */
+  while (true){
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(c)); return; }
+    catch(e){
+      if (ks.length <= 1) return;
+      delete c[ks.shift()];
+    }
+  }
+}
+
+function buildVars(page){
+  var v = {page: page, perPage: PER_PAGE, sort: [state.sort]};
+  if (state.q.trim()){
+    v.search = state.q.trim();
+    if (state.sort === "POPULARITY_DESC") v.sort = ["SEARCH_MATCH"];
+  } else {
+    if (state.season) v.season = state.season;
+    if (state.year) v.seasonYear = Number(state.year);
+  }
+  if (state.format) v.format = state.format;
+  if (state.genre) v.genre = state.genre;
+  if (state.minScore) v.scoreGreater = Number(state.minScore) - 1;
+  if (state.status) v.status = state.status;
+  return v;
+}
+
+function gql(query, vars, tag){
+  var key = tag + JSON.stringify(vars);
+  if (!state.fresh){
+    var hit = cacheGet(key);
+    if (hit) return Promise.resolve(hit);
+  }
+  return fetch(API, {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Accept": "application/json"},
+    body: JSON.stringify({query: query, variables: vars})
+  }).then(function(res){
+    if (res.status === 429){
+      var wait = res.headers.get("Retry-After") || "60";
+      throw new Error("APIのアクセス制限中です。約" + wait + "秒後に「再取得」してください。");
+    }
+    if (!res.ok) throw new Error("取得に失敗しました (HTTP " + res.status + ")");
+    return res.json();
+  }).then(function(json){
+    if (json.errors) throw new Error(json.errors.map(function(e){ return e.message; }).join(" / "));
+    var data = json.data.Page;
+    cacheSet(key, data);
+    return data;
+  }).catch(function(err){
+    /* 通信できないときは期限切れのキャッシュで代替する */
+    var stale = cacheRaw(key);
+    if (stale){
+      staleNotice(stale.t);
+      return stale.d;
+    }
+    throw new Error(friendlyError(err));
+  });
+}
+
+function friendlyError(err){
+  if (!navigator.onLine) return "オフラインです。ネットワークに接続してから再試行してください。";
+  if (err instanceof TypeError) return "AniList API に接続できませんでした。時間をおいて再試行してください。";
+  return err.message;
+}
+function staleNotice(t){
+  var when = new Date(t).toLocaleString("ja-JP",
+    {month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"});
+  showNotice((navigator.onLine ? "APIに接続できないため" : "オフラインのため") +
+    "、" + when + " に取得したデータを表示しています。");
+}
+function showNotice(text){
+  var n = el("notice");
+  n.innerHTML = "<span>" + esc(text) + '</span><button id="retry">再試行</button>';
+  n.hidden = false;
+  el("retry").onclick = refresh;
+}
+function hideNotice(){ el("notice").hidden = true; }
+
+function fetchPage(page){ return gql(QUERY, buildVars(page), "m"); }
+
+function loadMore(){
+  if (state.loading || !state.hasNext) return;
+  state.loading = true;
+  renderMore();
+  fetchPage(state.page).then(function(data){
+    state.items = state.items.concat(data.media);
+    state.hasNext = data.pageInfo.hasNextPage;
+    state.total = data.pageInfo.total;
+    state.page++;
+    state.fresh = false;
+    msg("");
+    renderGrid();
+    renderSummary();
+  }).catch(function(err){
+    msg(err.message, true, true);
+  }).then(function(){
+    state.loading = false;
+    state.fresh = false;
+    renderMore();
+  });
+}
+
+function refresh(){
+  state.fresh = true;
+  hideNotice();
+  if (state.view === "cal"){ loadCalendar(true); return; }
+  reset();
+}
+
+function reset(){
+  hideNotice();
+  state.page = 1; state.hasNext = true; state.items = []; state.total = 0;
+  setView("list");
+  el("grid").innerHTML = ""; el("summary").hidden = true;
+  msg("読み込み中…");
+  loadMore();
+}
+
+function setView(v){
+  state.view = v;
+  el("tabList").classList.toggle("on", v === "list");
+  el("tabCal").classList.toggle("on", v === "cal");
+  el("tabFav").classList.toggle("on", v === "fav");
+  el("searchPanel").hidden = v === "cal";
+  el("calBar").hidden = v !== "cal";
+  el("cal").hidden = v !== "cal";
+  el("grid").hidden = v === "cal";
+  msg("");
+  if (v === "cal"){
+    el("summary").hidden = true;
+    el("more").innerHTML = "";
+    loadCalendar(false);
+  } else {
+    renderGrid();
+    renderMore();
+    if (v === "list") renderSummary(); else el("summary").hidden = true;
+  }
+}
+
+function el(id){ return document.getElementById(id); }
+function msg(t, isErr, retry){
+  var m = el("msg");
+  m.innerHTML = t ? esc(t) + (retry ? '<button id="msgRetry">再試行</button>' : "") : "";
+  m.className = "msg" + (isErr ? " err" : "");
+  m.style.display = t ? "" : "none";
+  var b = el("msgRetry");
+  if (b) b.onclick = refresh;
+}
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function title(m){ return m.title.native || m.title.romaji || m.title.english || "(無題)"; }
+function studios(m){ return m.studios && m.studios.nodes ? m.studios.nodes.map(function(s){ return s.name; }) : []; }
+function subtitle(m){
+  var parts = [FORMATS[m.format] || m.format || "", m.episodes ? m.episodes + "話" : "", studios(m)[0] || ""];
+  return parts.filter(Boolean).join(" ・ ");
+}
+function statusTag(m){
+  var cls = m.status === "RELEASING" ? "air" : m.status === "NOT_YET_RELEASED" ? "pre" : "end";
+  return '<span class="tag ' + cls + '">' + (STATUS[m.status] || "—") + "</span>";
+}
+function currentList(){
+  if (state.view !== "fav") return state.items;
+  return Object.keys(favs).map(function(k){ return favs[k]; }).reverse();
+}
+
+function renderGrid(){
+  var list = currentList();
+  el("grid").innerHTML = list.map(function(m){
+    var on = favs[m.id] ? " on" : "";
+    var img = m.coverImage && m.coverImage.large
+      ? '<img loading="lazy" src="' + esc(m.coverImage.large) + '" alt="">' : "";
+    var sc = m.averageScore ? '<span class="score">' + (m.averageScore / 10).toFixed(1) + "</span>" : "";
+    var gen = (m.genres || []).slice(0, 2).map(function(x){
+      return '<span class="tag">' + esc(GENRES[x] || x) + "</span>";
+    }).join("");
+    return '<article class="card" data-id="' + m.id + '">' +
+      '<div class="thumb">' + img + sc +
+      '<button class="fav' + on + '" data-fav="' + m.id + '" title="お気に入り">★</button></div>' +
+      '<div class="body"><div class="ttl">' + esc(title(m)) + "</div>" +
+      '<div class="sub">' + esc(subtitle(m)) + "</div>" +
+      "<div>" + statusTag(m) + gen + "</div></div></article>";
+  }).join("");
+  if (!list.length && !state.loading){
+    msg(state.view === "fav" ? "お気に入りはまだありません。カードの★で追加できます。" : "該当する作品がありません。");
+  }
+}
+
+function renderMore(){
+  var box = el("more");
+  if (state.view === "fav"){ box.innerHTML = ""; return; }
+  if (state.loading){ box.innerHTML = '<span class="msg">読み込み中…</span>'; return; }
+  box.innerHTML = state.hasNext ? '<button id="btnMore">さらに読み込む</button>' : "";
+  var b = el("btnMore");
+  if (b) b.onclick = loadMore;
+}
+
+function topCount(list, pick){
+  var c = {};
+  list.forEach(function(m){
+    (pick(m) || []).forEach(function(k){ if (k) c[k] = (c[k] || 0) + 1; });
+  });
+  return Object.keys(c).map(function(k){ return [k, c[k]]; })
+    .sort(function(a, b){ return b[1] - a[1]; }).slice(0, 5);
+}
+function bars(rows){
+  if (!rows.length) return '<div class="bars"><div class="bar"><span>—</span></div></div>';
+  var max = rows[0][1];
+  return '<div class="bars">' + rows.map(function(r){
+    return '<div class="bar"><span>' + esc(GENRES[r[0]] || r[0]) + "</span>" +
+      '<i style="width:' + Math.round(r[1] / max * 100) + '%"></i><b>' + r[1] + "</b></div>";
+  }).join("") + "</div>";
+}
+function scopeLabel(){
+  if (state.q.trim()) return "「" + state.q.trim() + "」の検索結果";
+  if (state.status === "RELEASING") return "放送中の作品";
+  var y = state.year ? state.year + "年" : "全期間";
+  return y + (state.season ? SEASONS[state.season] + "アニメ" : "");
+}
+function renderSummary(){
+  var list = state.items;
+  if (state.view === "fav" || !list.length){ el("summary").hidden = true; return; }
+  var scored = list.filter(function(m){ return m.averageScore; });
+  var avg = scored.length
+    ? (scored.reduce(function(s, m){ return s + m.averageScore; }, 0) / scored.length / 10).toFixed(1) : "—";
+  var airing = list.filter(function(m){ return m.status === "RELEASING"; }).length;
+  el("sumTitle").textContent = scopeLabel() + " のまとめ";
+  el("stats").innerHTML =
+    '<div class="stat"><div class="k">読み込み済み</div><div class="v">' + list.length +
+      "<small> / " + (state.total || list.length) + "件</small></div></div>" +
+    '<div class="stat"><div class="k">平均スコア</div><div class="v">' + avg + "</div></div>" +
+    '<div class="stat"><div class="k">放送中</div><div class="v">' + airing + "<small> 本</small></div></div>" +
+    '<div class="stat"><div class="k">ジャンル上位</div>' +
+      bars(topCount(list, function(m){ return m.genres; })) + "</div>" +
+    '<div class="stat"><div class="k">制作会社上位</div>' +
+      bars(topCount(list, function(m){ return studios(m); })) + "</div>" +
+    '<div class="stat"><div class="k">原作</div>' +
+      bars(topCount(list, function(m){ return m.source ? [SOURCES[m.source] || m.source] : []; })) + "</div>";
+  el("summary").hidden = false;
+}
+
+/* ---------- 曜日表（今週の放送予定） ---------- */
+var WEEK = ["日","月","火","水","木","金","土"];
+var SHORT_FORMATS = ["TV_SHORT", "MUSIC", "SPECIAL", "OVA"];
+var cal = {rows: [], byId: {}, loading: false, loaded: false, err: ""};
+
+/* 放送日は「朝5時始まり」で数える（深夜アニメの慣習に合わせる） */
+function calStart(){
+  var s = new Date();
+  if (s.getHours() < 5) s.setDate(s.getDate() - 1);
+  s.setHours(5, 0, 0, 0);
+  return s;
+}
+function dayKey(d){ return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); }
+
+function loadCalendar(force){
+  if (cal.loading) return;
+  if (cal.loaded && !force){ renderCalendar(); return; }
+  cal.loading = true; cal.rows = []; cal.byId = {}; cal.err = "";
+  hideNotice();
+  renderCalendar();
+  var start = calStart();
+  var from = Math.floor(start.getTime() / 1000);
+  var to = from + 7 * 86400;
+  var page = 1;
+  function step(){
+    return gql(SCHEDULE_QUERY, {page: page, perPage: 50, from: from - 1, to: to}, "s").then(function(data){
+      (data.airingSchedules || []).forEach(function(s){
+        if (!s.media || s.media.isAdult) return;
+        cal.rows.push({at: s.airingAt, ep: s.episode, m: s.media});
+        cal.byId[s.media.id] = s.media;
+      });
+      renderCalendar();            /* 取得できたページから順に描画 */
+      page++;
+      if (data.pageInfo.hasNextPage && page <= 8) return step();
+    });
+  }
+  step().then(function(){
+    cal.loaded = true;
+  }).catch(function(e){
+    cal.err = e.message;
+  }).then(function(){
+    cal.loading = false;
+    state.fresh = false;
+    renderCalendar();
+  });
+}
+
+function calFilter(r){
+  var m = r.m;
+  if (el("calSeason").checked && !(m.seasonYear === CUR.year && m.season === CUR.season)) return false;
+  if (el("calNoShort").checked && SHORT_FORMATS.indexOf(m.format) >= 0) return false;
+  return true;
+}
+function airTime(at){
+  var d = new Date(at * 1000);
+  var h = d.getHours();
+  if (h < 5) h += 24;                      /* 深夜は24時制（25:30 = 翌1:30） */
+  return h + ":" + ("0" + d.getMinutes()).slice(-2);
+}
+
+function renderCalendar(){
+  var box = el("cal");
+  if (cal.loading && !cal.rows.length){
+    box.innerHTML = '<div class="msg" style="grid-column:1/-1">放送予定を取得中…</div>';
+    return;
+  }
+  if (cal.err){
+    box.innerHTML = '<div class="msg err" style="grid-column:1/-1">' + esc(cal.err) +
+      '<button id="calRetry">再試行</button></div>';
+    el("calRetry").onclick = refresh;
+    return;
+  }
+
+  var start = calStart();
+  var days = [], index = {};
+  for (var i = 0; i < 7; i++){
+    var d = new Date(start.getTime());
+    d.setDate(d.getDate() + i);
+    days.push({d: d, rows: []});
+    index[dayKey(d)] = i;
+  }
+  var shown = 0;
+  cal.rows.forEach(function(r){
+    if (!calFilter(r)) return;
+    var d = new Date(r.at * 1000);
+    if (d.getHours() < 5) d.setDate(d.getDate() - 1);   /* 深夜分は前日の枠へ */
+    var i = index[dayKey(d)];
+    if (i == null) return;
+    days[i].rows.push(r);
+    shown++;
+  });
+
+  var todayKey = dayKey(start);
+  box.innerHTML = days.map(function(o){
+    var slots = o.rows.map(function(r){
+      var m = r.m;
+      var img = m.coverImage && m.coverImage.medium
+        ? '<img loading="lazy" src="' + esc(m.coverImage.medium) + '" alt="">' : "";
+      var sc = m.averageScore ? " ・ " + (m.averageScore / 10).toFixed(1) : "";
+      return '<div class="slot" data-id="' + m.id + '">' + img +
+        '<div class="info"><div class="t">' + airTime(r.at) + "</div>" +
+        '<div class="n">' + esc(title(m)) + "</div>" +
+        '<div class="e">第' + r.ep + "話" + sc + "</div></div></div>";
+    }).join("");
+    return '<section class="day' + (dayKey(o.d) === todayKey ? " today" : "") + '">' +
+      "<h4>" + WEEK[o.d.getDay()] + "<small>" + (o.d.getMonth() + 1) + "/" + o.d.getDate() + "</small>" +
+      "<b>" + o.rows.length + "</b></h4>" +
+      (slots || '<div class="none">放送なし</div>') + "</section>";
+  }).join("") +
+  '<p class="calnote">' + rangeLabel(start) + (cal.loading ? "（読み込み中…）" : "") +
+  "　表示 " + shown + " 本 / 取得 " + cal.rows.length +
+  " 本　深夜帯は24時制で表示しています（25:30 = 翌1:30）。時刻は端末のタイムゾーン基準です。</p>";
+}
+function rangeLabel(start){
+  var end = new Date(start.getTime());
+  end.setDate(end.getDate() + 6);
+  return (start.getMonth() + 1) + "/" + start.getDate() + " 〜 " + (end.getMonth() + 1) + "/" + end.getDate() + " の放送予定";
+}
+
+function plain(desc){
+  return String(desc || "")
+    .replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
+    .replace(/&quot;/g, '"').replace(/&#039;/g, "'")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").trim();
+}
+function ymd(d){
+  if (!d || !d.year) return "—";
+  return d.year + "/" + (d.month || "?") + "/" + (d.day || "?");
+}
+function openDetail(id){
+  var list = currentList(), m = null;
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) { m = list[i]; break; }
+  if (!m) m = cal.byId[id] || favs[id];
+  if (!m) return;
+  var trailer = m.trailer && m.trailer.site === "youtube"
+    ? '<a href="https://www.youtube.com/watch?v=' + esc(m.trailer.id) + '" target="_blank" rel="noopener">PV</a>' : "";
+  var links = (m.externalLinks || []).slice(0, 8).map(function(l){
+    return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.site) + "</a>";
+  }).join("");
+  var next = "—";
+  if (m.nextAiringEpisode){
+    var nd = new Date(m.nextAiringEpisode.airingAt * 1000);
+    if (nd.getHours() < 5) nd.setDate(nd.getDate() - 1);   /* 曜日表と同じ「朝5時始まり」 */
+    next = "第" + m.nextAiringEpisode.episode + "話 " +
+      (nd.getMonth() + 1) + "/" + nd.getDate() + "(" + WEEK[nd.getDay()] + ") " +
+      airTime(m.nextAiringEpisode.airingAt);
+  }
+  el("sheet").innerHTML =
+    (m.bannerImage ? '<div class="banner" style="background-image:url(' + esc(m.bannerImage) + ')"></div>' : "") +
+    '<div class="inner"><button class="close" id="closeBtn">閉じる</button>' +
+    "<h3>" + esc(title(m)) + "</h3>" +
+    '<p class="nat">' + esc(m.title.romaji || "") +
+      (m.title.english ? " / " + esc(m.title.english) : "") + "</p>" +
+    '<div class="cols">' +
+      (m.coverImage ? '<img class="cover" src="' + esc(m.coverImage.large) + '" alt="">' : "") +
+      '<div class="meta"><dl>' +
+      "<dt>放送</dt><dd>" + (m.seasonYear || "—") + (m.season ? " " + SEASONS[m.season] : "") +
+        "（" + ymd(m.startDate) + " 〜 " + ymd(m.endDate) + "）</dd>" +
+      "<dt>状態</dt><dd>" + (STATUS[m.status] || "—") + "</dd>" +
+      "<dt>次回放送</dt><dd>" + next + "</dd>" +
+      "<dt>形式</dt><dd>" + (FORMATS[m.format] || "—") +
+        (m.episodes ? " / 全" + m.episodes + "話" : "") +
+        (m.duration ? " / " + m.duration + "分" : "") + "</dd>" +
+      "<dt>制作</dt><dd>" + esc(studios(m).join("、") || "—") + "</dd>" +
+      "<dt>原作</dt><dd>" + esc(SOURCES[m.source] || m.source || "—") + "</dd>" +
+      "<dt>スコア</dt><dd>" + (m.averageScore ? (m.averageScore / 10).toFixed(1) + " / 10" : "—") +
+        "（人気度 " + (m.popularity || 0).toLocaleString() + "）</dd>" +
+      "<dt>ジャンル</dt><dd>" + esc((m.genres || []).map(function(g){ return GENRES[g] || g; }).join("、") || "—") + "</dd>" +
+      "</dl>" +
+      '<div class="links">' + trailer +
+        '<a href="' + esc(m.siteUrl) + '" target="_blank" rel="noopener">AniList</a>' + links + "</div>" +
+      "</div></div>" +
+    '<div class="desc">' + esc(plain(m.description) || "あらすじは登録されていません。") + "</div></div>";
+  el("modal").classList.add("open");
+  el("closeBtn").onclick = closeDetail;
+}
+function closeDetail(){ el("modal").classList.remove("open"); }
+
+function toggleFav(id){
+  if (favs[id]) delete favs[id];
+  else {
+    var list = currentList(), m = null;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) { m = list[i]; break; }
+    if (!m) return;
+    favs[id] = m;
+  }
+  save(FAV_KEY, favs);
+  renderFavCount();
+  renderGrid();
+}
+function renderFavCount(){
+  var n = Object.keys(favs).length;
+  el("favCount").textContent = n ? "(" + n + ")" : "";
+}
+
+(function initSelects(){
+  var y = el("year"), html = '<option value="">指定なし</option>';
+  for (var v = CUR.year + 1; v >= 1960; v--) html += '<option value="' + v + '">' + v + "年</option>";
+  y.innerHTML = html;
+  el("genre").innerHTML = '<option value="">すべて</option>' +
+    Object.keys(GENRES).map(function(k){ return '<option value="' + k + '">' + GENRES[k] + "</option>"; }).join("");
+})();
+
+function syncForm(){
+  el("year").value = state.year || "";
+  el("season").value = state.season || "";
+  el("sort").value = state.sort;
+  el("format").value = state.format;
+  el("genre").value = state.genre;
+  el("minScore").value = state.minScore;
+  el("q").value = state.q;
+}
+function readForm(){
+  state.year = el("year").value;
+  state.season = el("season").value;
+  state.sort = el("sort").value;
+  state.format = el("format").value;
+  state.genre = el("genre").value;
+  state.minScore = el("minScore").value;
+  state.q = el("q").value;
+}
+
+var PRESETS = {
+  current: function(){ return {year: CUR.year, season: CUR.season, sort: "POPULARITY_DESC", status: "", q: "", minScore: ""}; },
+  prev: function(){ var s = shiftSeason(CUR.year, CUR.season, -1); return {year: s.year, season: s.season, sort: "POPULARITY_DESC", status: "", q: "", minScore: ""}; },
+  next: function(){ var s = shiftSeason(CUR.year, CUR.season, 1); return {year: s.year, season: s.season, sort: "POPULARITY_DESC", status: "", q: "", minScore: ""}; },
+  airing: function(){ return {year: "", season: "", sort: "TRENDING_DESC", status: "RELEASING", q: "", minScore: ""}; },
+  alltime: function(){ return {year: "", season: "", sort: "SCORE_DESC", status: "", q: "", minScore: "75"}; },
+  year: function(){ return {year: CUR.year, season: "", sort: "SCORE_DESC", status: "", q: "", minScore: ""}; }
+};
+Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), function(b){
+  b.onclick = function(){
+    var p = PRESETS[b.dataset.preset]();
+    state.format = ""; state.genre = "";
+    Object.keys(p).forEach(function(k){ state[k] = p[k]; });
+    syncForm();
+    reset();
+  };
+});
+
+el("toggleFilters").onclick = function(){
+  var open = !el("filters").classList.toggle("collapsed");
+  this.textContent = "詳細な絞り込み " + (open ? "▴" : "▾");
+};
+el("apply").onclick = function(){ readForm(); state.status = ""; reset(); };
+el("q").addEventListener("keydown", function(e){ if (e.key === "Enter") el("apply").click(); });
+el("reload").onclick = refresh;
+window.addEventListener("online", function(){ if (!el("notice").hidden) refresh(); });
+window.addEventListener("offline", function(){
+  showNotice("オフラインになりました。表示中のデータは最後に取得した内容です。");
+});
+el("tabList").onclick = function(){ setView("list"); };
+el("tabFav").onclick = function(){ setView("fav"); };
+el("tabCal").onclick = function(){ setView("cal"); };
+el("calSeason").onchange = renderCalendar;
+el("calNoShort").onchange = renderCalendar;
+el("cal").addEventListener("click", function(e){
+  var slot = e.target.closest(".slot");
+  if (slot) openDetail(Number(slot.dataset.id));
+});
+el("grid").addEventListener("click", function(e){
+  var fav = e.target.closest("[data-fav]");
+  if (fav){ e.stopPropagation(); toggleFav(Number(fav.dataset.fav)); return; }
+  var card = e.target.closest(".card");
+  if (card) openDetail(Number(card.dataset.id));
+});
+el("modal").addEventListener("click", function(e){ if (e.target.id === "modal") closeDetail(); });
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeDetail(); });
+
+syncForm();
+renderFavCount();
+reset();
+</script>
+</body>
+</html>

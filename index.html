@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アニメまとめ｜外部API連携アプリのサンプル</title>
+<meta name="description" content="外部API（AniList）から今季・過去のアニメを自動取得し、一覧・集計・週間放送スケジュールとして表示する単一HTMLファイルのWebアプリです。">
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --border:#dfe3e8; --text:#1c2024;
+    --muted:#6b7280; --accent:#2563eb; --accent-weak:#eaf0fe;
+    --ok:#127c4a; --shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#15181c; --panel:#1d2126; --border:#333a42; --text:#e6e8ea;
+      --muted:#9aa3ad; --accent:#5b8dee; --accent-weak:#22304a;
+      --ok:#4cc38a; --shadow:none;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:0 20px 72px;background:var(--bg);color:var(--text);
+    font-family:"Segoe UI","Yu Gothic UI","Hiragino Kaku Gothic ProN",Meiryo,system-ui,sans-serif;
+    font-size:15px;line-height:1.8;}
+  .wrap{max-width:860px;margin:0 auto}
+  a{color:var(--accent)}
+  /* ヒーロー */
+  header{padding:64px 0 40px;border-bottom:1px solid var(--border);margin-bottom:44px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;color:var(--muted);margin:0 0 10px}
+  h1{font-size:32px;line-height:1.35;margin:0 0 14px;font-weight:600;letter-spacing:.01em}
+  .sub{font-size:15px;color:var(--muted);margin:0 0 26px;max-width:620px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-block;text-decoration:none;font-size:14px;font-weight:600;
+    padding:11px 24px;border-radius:8px;border:1px solid var(--border);color:var(--text);
+    background:var(--panel);box-shadow:var(--shadow)}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{opacity:.88;color:#fff}
+  .hint{font-size:12px;color:var(--muted)}
+  /* セクション */
+  section{margin-bottom:48px}
+  h2{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.1em;margin:0 0 18px;
+    padding-bottom:8px;border-bottom:1px solid var(--border)}
+  h3{font-size:15px;margin:0 0 4px;font-weight:600}
+  p{margin:0 0 12px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:16px 18px;box-shadow:var(--shadow)}
+  .card p{font-size:13.5px;color:var(--muted);margin:0}
+  .num{font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.1em}
+  dl.spec{display:grid;grid-template-columns:150px 1fr;gap:10px 20px;margin:0;font-size:14px}
+  dl.spec dt{color:var(--muted);font-size:13px}
+  dl.spec dd{margin:0}
+  ul.pt{margin:0;padding-left:0;list-style:none}
+  ul.pt li{padding:12px 0;border-bottom:1px solid var(--border)}
+  ul.pt li:last-child{border-bottom:none}
+  ul.pt p{font-size:13.5px;color:var(--muted);margin:2px 0 0}
+  .use{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .use div{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);
+    border-radius:0 8px 8px 0;padding:12px 14px;font-size:13.5px}
+  code{background:var(--accent-weak);color:var(--accent);padding:1px 6px;border-radius:4px;
+    font-size:12.5px;font-family:Consolas,"Courier New",monospace}
+  footer{border-top:1px solid var(--border);padding-top:22px;font-size:12px;color:var(--muted)}
+  footer p{margin:0 0 6px}
+  @media(max-width:600px){
+    body{padding:0 16px 56px}
+    header{padding:44px 0 32px;margin-bottom:36px}
+    h1{font-size:25px}
+    dl.spec{grid-template-columns:1fr;gap:2px}
+    dl.spec dd{margin-bottom:10px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">WEB アプリ制作サンプル / 外部API連携</p>
+    <h1>アニメまとめ</h1>
+    <p class="sub">
+      外部APIから今季・過去のアニメ情報を自動取得し、一覧・集計・週間放送スケジュールとして
+      表示するWebアプリです。サーバー不要・依存ライブラリなしの単一HTMLファイルで動作します。
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="anime.html">デモを開く</a>
+      <a class="btn" href="https://github.com/Naatlant/anime-matome">ソースコード</a>
+      <span class="hint">ブラウザで開くだけで動作します（登録・APIキー不要）</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>できること</h2>
+    <div class="cards">
+      <div class="card">
+        <p class="num">01</p>
+        <h3>今季アニメの自動取得</h3>
+        <p>アクセスした日付から放送シーズンを自動判定して一覧表示。前季・来季・歴代トップ・年別ベストにもワンタップで切り替わります。</p>
+      </div>
+      <div class="card">
+        <p class="num">02</p>
+        <h3>条件を組み合わせた抽出</h3>
+        <p>年（1960年〜）×季節×並び順×放送形式×ジャンル×最低スコア、さらに作品名のキーワード検索。過去作品も同じ画面から探せます。</p>
+      </div>
+      <div class="card">
+        <p class="num">03</p>
+        <h3>取得結果の自動集計</h3>
+        <p>件数・平均スコア・放送中本数に加え、ジャンル / 制作会社 / 原作媒体の分布をその場で集計してグラフ表示します。</p>
+      </div>
+      <div class="card">
+        <p class="num">04</p>
+        <h3>週間放送スケジュール</h3>
+        <p>今週7日分の放送予定を曜日別に時刻順で表示。深夜帯は放送業界の慣習に合わせ、朝5時始まりの24時制（25:30＝翌1:30）で表記します。</p>
+      </div>
+      <div class="card">
+        <p class="num">05</p>
+        <h3>詳細情報とお気に入り</h3>
+        <p>あらすじ・放送期間・次回放送日時・制作会社・PV・公式サイト・配信先リンクを表示。気になる作品は端末内に保存できます。</p>
+      </div>
+      <div class="card">
+        <p class="num">06</p>
+        <h3>オフラインでも閲覧可能</h3>
+        <p>通信できないときは直近の取得データに自動で切り替え、いつ時点の情報かを明示します。復旧時はワンクリックで最新に戻せます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>技術構成</h2>
+    <dl class="spec">
+      <dt>構成</dt>
+      <dd>単一HTMLファイル（約840行）。HTML / CSS / JavaScript のみで、外部ライブラリ・ビルド・サーバーは不要です。</dd>
+      <dt>データ取得</dt>
+      <dd>AniList GraphQL API。作品一覧と放送スケジュールの2種類のクエリをフィールド定義共有で構築しています。</dd>
+      <dt>キャッシュ</dt>
+      <dd>localStorage に6時間保持。APIのレート制限（30リクエスト/分）対策と再訪時の高速表示を兼ねています。</dd>
+      <dt>表示</dt>
+      <dd>CSS Grid によるレスポンシブ対応（PC / タブレット / スマートフォン）。OSのダークモード設定に自動追従します。</dd>
+      <dt>動作環境</dt>
+      <dd>Chrome / Edge / Firefox / Safari の現行版。インストール不要、ファイルを開くだけで動作します。</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>実装で工夫した点</h2>
+    <ul class="pt">
+      <li>
+        <h3>API制限を前提にした設計</h3>
+        <p>同一条件のリクエストはキャッシュから返し、スケジュール取得はページ単位の逐次読み込みにして、取得できた分から順に画面へ反映します。</p>
+      </li>
+      <li>
+        <h3>障害時に画面を白紙にしない</h3>
+        <p>通信失敗時は期限切れキャッシュへ自動フォールバックし、取得時刻を添えて通知します。オフライン・接続失敗・レート制限をメッセージで区別します。</p>
+      </li>
+      <li>
+        <h3>ドメインの慣習に合わせた日付処理</h3>
+        <p>深夜アニメの「放送日」は暦日と一致しないため、朝5時始まりで日付を区切り、24時以降の表記に統一しています。</p>
+      </li>
+      <li>
+        <h3>保存領域の枯渇に耐える</h3>
+        <p>localStorage の容量超過時は古いデータから破棄して書き込みを再試行。保存が使えない環境でも機能を落として動作を継続します。</p>
+      </li>
+      <li>
+        <h3>外部データの安全な描画</h3>
+        <p>APIから受け取った文字列はすべてエスケープしてから描画し、HTMLを含む説明文はタグを除去したうえでテキストとして表示します。</p>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>同じ仕組みで作れるもの</h2>
+    <p style="font-size:13.5px;color:var(--muted)">
+      「外部からデータを取得して、一覧・絞り込み・集計・カレンダーで見せる」構造はそのまま流用できます。
+    </p>
+    <div class="use">
+      <div>社内データや基幹システムのダッシュボード</div>
+      <div>ECサイトの商品一覧・在庫状況ビューア</div>
+      <div>予約状況・シフトの週間カレンダー</div>
+      <div>顧客管理システムからの帳票・集計画面</div>
+      <div>各種Web APIを使った情報収集ツール</div>
+      <div>公開データの可視化・レポートページ</div>
+    </div>
+  </section>
+
+  <footer>
+    <p>データ提供: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>（作品情報・画像の権利は各権利者に帰属します）</p>
+    <p>本ページおよびアプリは制作サンプルです。表示内容の正確性を保証するものではありません。</p>
+  </footer>
+
+</div>
+</body>
+</html>
