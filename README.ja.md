@@ -1,4 +1,4 @@
-# アニメまとめ
+# Courdeck
 
 *English version: [README.md](README.md)*
 
@@ -134,7 +134,7 @@ https://naatlant.github.io/anime-matome/?year=&season=&genre=Sci-Fi&score=80&sor
 ```html
 <iframe src="https://naatlant.github.io/anime-matome/?view=cal&lang=ja"
         width="100%" height="800" style="border:0" loading="lazy"
-        title="アニメまとめ"></iframe>
+        title="Courdeck"></iframe>
 ```
 
 ### 手元に置いて使う

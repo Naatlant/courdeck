@@ -1,4 +1,4 @@
-# Anime Matome
+# Courdeck
 
 *日本語版は [README.ja.md](README.ja.md) をご覧ください。*
 
@@ -144,7 +144,7 @@ you can post once and never update.**
 ```html
 <iframe src="https://naatlant.github.io/anime-matome/?view=cal&lang=en"
         width="100%" height="800" style="border:0" loading="lazy"
-        title="Anime Matome"></iframe>
+        title="Courdeck"></iframe>
 ```
 
 ### Run it yourself
