@@ -300,7 +300,8 @@ var CUR = {year: NOW.getFullYear(), season: seasonOf(NOW)};
 var state = {
   year: CUR.year, season: CUR.season, sort: "POPULARITY_DESC",
   format: "", genre: "", minScore: "", q: "", status: "",
-  page: 1, hasNext: true, total: 0, items: [], loading: false, view: "list", fresh: false
+  page: 1, hasNext: true, total: 0, items: [], loading: false, view: "list", fresh: false,
+  autoPages: 0
 };
 var favs = load(FAV_KEY, {});
 
@@ -398,13 +399,14 @@ function hideNotice(){ el("notice").hidden = true; }
 
 function fetchPage(page){ return gql(QUERY, buildVars(page), "m"); }
 
-function loadMore(){
+function loadMore(auto){
   if (state.loading || !state.hasNext) return;
+  if (auto) state.autoPages++;
   state.loading = true;
   renderMore();
   fetchPage(state.page).then(function(data){
     state.items = state.items.concat(data.media);
-    state.hasNext = data.pageInfo.hasNextPage;
+    state.hasNext = data.pageInfo.hasNextPage && data.media.length > 0;
     state.total = data.pageInfo.total;
     state.page++;
     state.fresh = false;
@@ -417,7 +419,21 @@ function loadMore(){
     state.loading = false;
     state.fresh = false;
     renderMore();
+    checkAutoLoad();       /* 画面がまだ埋まっていなければ続けて読み込む */
   });
+}
+
+/* --- スクロールに応じた自動読み込み --- */
+var AUTO_PAGE_LIMIT = 10;                              /* 連続で自動読み込みする上限ページ数 */
+var autoLoadOn = ("IntersectionObserver" in window);   /* 非対応環境はボタン表示にする */
+
+function canAutoLoad(){
+  return autoLoadOn && state.view === "list" && state.hasNext &&
+         !state.loading && state.autoPages < AUTO_PAGE_LIMIT;
+}
+function checkAutoLoad(){
+  if (!canAutoLoad()) return;
+  if (el("more").getBoundingClientRect().top < window.innerHeight + 300) loadMore(true);
 }
 
 function refresh(){
@@ -429,7 +445,7 @@ function refresh(){
 
 function reset(){
   hideNotice();
-  state.page = 1; state.hasNext = true; state.items = []; state.total = 0;
+  state.page = 1; state.hasNext = true; state.items = []; state.total = 0; state.autoPages = 0;
   setView("list");
   el("grid").innerHTML = ""; el("summary").hidden = true;
   msg("読み込み中…");
@@ -510,11 +526,16 @@ function renderGrid(){
 
 function renderMore(){
   var box = el("more");
-  if (state.view === "fav"){ box.innerHTML = ""; return; }
+  if (state.view !== "list"){ box.innerHTML = ""; return; }
   if (state.loading){ box.innerHTML = '<span class="msg">読み込み中…</span>'; return; }
-  box.innerHTML = state.hasNext ? '<button id="btnMore">さらに読み込む</button>' : "";
+  if (!state.hasNext){
+    box.innerHTML = state.items.length ? '<span class="msg">すべて読み込みました</span>' : "";
+    return;
+  }
+  /* 自動読み込みが続く間はボタンを出さない（上限到達・未対応環境のみ手動） */
+  box.innerHTML = canAutoLoad() ? "" : '<button id="btnMore">さらに読み込む</button>';
   var b = el("btnMore");
-  if (b) b.onclick = loadMore;
+  if (b) b.onclick = function(){ state.autoPages = 0; loadMore(true); };
 }
 
 function topCount(list, pick){
@@ -548,8 +569,10 @@ function renderSummary(){
   var airing = list.filter(function(m){ return m.status === "RELEASING"; }).length;
   el("sumTitle").textContent = scopeLabel() + " のまとめ";
   el("stats").innerHTML =
-    '<div class="stat"><div class="k">読み込み済み</div><div class="v">' + list.length +
-      "<small> / " + (state.total || list.length) + "件</small></div></div>" +
+    /* AniList は途中のページでは total=5000 の固定値を返すため、全件読み終えるまで総数は出さない */
+    '<div class="stat"><div class="k">' + (state.hasNext ? "読み込み済み" : "作品数") + "</div>" +
+      '<div class="v">' + list.length + "<small> 件" +
+      (state.hasNext ? "" : "（全件）") + "</small></div></div>" +
     '<div class="stat"><div class="k">平均スコア</div><div class="v">' + avg + "</div></div>" +
     '<div class="stat"><div class="k">放送中</div><div class="v">' + airing + "<small> 本</small></div></div>" +
     '<div class="stat"><div class="k">ジャンル上位</div>' +
@@ -829,6 +852,12 @@ el("grid").addEventListener("click", function(e){
 });
 el("modal").addEventListener("click", function(e){ if (e.target.id === "modal") closeDetail(); });
 document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeDetail(); });
+
+if (autoLoadOn){
+  new IntersectionObserver(function(entries){
+    if (entries[0].isIntersecting) checkAutoLoad();
+  }, {rootMargin: "300px"}).observe(el("more"));
+}
 
 syncForm();
 renderFavCount();
