@@ -4,8 +4,7 @@
 
 外部APIから今季・過去のアニメ情報を自動取得し、一覧・集計・週間放送スケジュール・国内の配信状況として表示するWebアプリです。
 
-- **紹介ページ**: https://naatlant.github.io/anime-matome/
-- **アプリ本体**: https://naatlant.github.io/anime-matome/anime.html
+**→ https://naatlant.github.io/anime-matome/**
 
 アプリ本体は依存ライブラリもビルドも不要な単一HTMLファイルです。閲覧者側にAPIキーは要りません。
 
@@ -33,7 +32,7 @@
 
 | 区分 | 内容 |
 | --- | --- |
-| フロントエンド | 単一HTMLファイル（`anime.html`、約1,200行）。HTML + CSS + JavaScript のみ、依存パッケージなし |
+| フロントエンド | 単一HTMLファイル（`index.html`、約1,450行）。HTML + CSS + JavaScript のみ、依存パッケージなし |
 | 作品情報 | AniList GraphQL API（`media` / `airingSchedules` の2クエリ、フィールド定義は共有） |
 | あらすじ | 日本語版Wikipedia API（完全一致 → 季数を除いた題名 → 検索の3段階で照合） |
 | 配信情報 | TMDB API（データ提供元は JustWatch）。GitHub Actions で取得し JSON として配信 |
@@ -49,7 +48,7 @@ flowchart LR
     A[GitHub Actions<br/>日次 / 週次] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
     B --> C[TMDB API<br/>watch/providers region=JP]
     C --> D[data/streaming.json<br/>6,152作品 / 106KB]
-    D --> E[anime.html<br/>閲覧者のブラウザ]
+    D --> E[index.html<br/>閲覧者のブラウザ]
 ```
 
 分割クールや第N期は同じTMDBシリーズを指すため、TMDB ID単位で重複排除しています（8,123件 → 5,452リクエスト）。
@@ -75,22 +74,94 @@ flowchart LR
 ## ファイル構成
 
 ```
-anime.html                        アプリ本体（単一ファイル）
-index.html                        紹介ページ
+index.html                        アプリ本体（単一ファイル）
+anime.html                        旧URL用のリダイレクト
 data/streaming.json               国内の配信情報（Actions が生成）
 scripts/fetch-streaming.mjs       配信情報の取得スクリプト
 .github/workflows/streaming.yml   日次 / 週次の更新ワークフロー
 ```
 
-## ローカルでの実行
+## 使い方
+
+### そのまま使う
+
+https://naatlant.github.io/anime-matome/ を開くだけです。**登録もインストールも不要**で、すぐに操作できます。
+
+- 開いた瞬間は今季のアニメが人気順で並びます
+- 上部のボタン（今季 / 前季 / 来季 / 放送中の話題作 / 歴代トップ / 今年のベスト）でよく使う条件に一発で切り替えられます
+- 細かく絞り込むときは「詳細な絞り込み」から年・季節・並び順・形式・ジャンル・最低スコアを指定します
+- **曜日表**タブで今週の放送予定を曜日別に確認できます
+- カードの★でお気に入りに登録すると、曜日表を「お気に入りのみ」に絞れます。**自分の視聴予定表として使えます**
+- 右上のボタンで日本語と英語を切り替えられます
+
+保存されるのはお使いのブラウザの中だけです。アカウントもサーバーもありません。
+
+### URLで条件を指定する
+
+絞り込み条件はすべてURLに入るので、**特定の画面をそのままブックマーク・共有できます**。手で組み立てることもできます。
+
+| パラメータ | 値 | 例 |
+| --- | --- | --- |
+| `lang` | `ja` / `en` | `?lang=en` |
+| `view` | `cal`（曜日表） / `fav`（お気に入り） | `?view=cal` |
+| `year` | 1960〜（空にすると全期間） | `?year=2016&season=` |
+| `season` | `WINTER` / `SPRING` / `SUMMER` / `FALL`（空で通年） | `?year=2016&season=FALL` |
+| `sort` | `POPULARITY_DESC` / `SCORE_DESC` / `TRENDING_DESC` / `START_DATE_DESC` / `FAVOURITES_DESC` / `TITLE_ROMAJI` | `?sort=SCORE_DESC` |
+| `format` | `TV` / `TV_SHORT` / `MOVIE` / `OVA` / `ONA` / `SPECIAL` | `?format=MOVIE` |
+| `genre` | AniListのジャンル名（`Action`, `Romance`, `Sci-Fi` など） | `?genre=Sci-Fi` |
+| `score` | `60` / `70` / `75` / `80` / `85`（最低スコア） | `?score=80` |
+| `q` | 作品名のキーワード（指定すると年・季節は無視されます） | `?q=%E9%8B%BC%E3%81%AE%E9%8C%AC%E9%87%91%E8%A1%93%E5%B8%AB` |
+
+具体例:
+
+```
+# 2016年秋アニメをスコア順で
+https://naatlant.github.io/anime-matome/?year=2016&season=FALL&sort=SCORE_DESC
+
+# 今週の放送予定
+https://naatlant.github.io/anime-matome/?view=cal
+
+# 歴代のSF作品でスコア80以上
+https://naatlant.github.io/anime-matome/?year=&season=&genre=Sci-Fi&score=80&sort=SCORE_DESC
+```
+
+年・季節を省略すると「その時点の今季」になります。**「今季アニメ」へのリンクとして貼っておけば、シーズンが変わっても自動で最新になります。**
+
+### 自分のサイトに埋め込む
+
+`iframe` でそのまま置けます。
+
+```html
+<iframe src="https://naatlant.github.io/anime-matome/?view=cal&lang=ja"
+        width="100%" height="800" style="border:0" loading="lazy"
+        title="アニメまとめ"></iframe>
+```
+
+### 手元に置いて使う
+
+アプリは1ファイルなので、ダウンロードするだけで動きます。
+
+```
+curl -O https://naatlant.github.io/anime-matome/index.html
+```
+
+ブラウザで開けば、作品一覧・曜日表・検索はすべて動作します。ただし **`file://` で開くと配信情報だけ表示されません**。ブラウザがローカルファイルへの `fetch` を禁止しているためです。配信情報も見たい場合は、`data/streaming.json` も一緒に置いたうえで、任意の静的サーバー経由で開いてください。
 
 ```
 git clone https://github.com/Naatlant/anime-matome.git
+cd anime-matome
+npx serve .        # 任意の静的サーバーで可
 ```
 
-`anime.html` をブラウザで開けば動作します。ただし **`file://` で開いた場合は配信情報だけ表示されません**。ブラウザがローカルファイルへの `fetch` を禁止しているためで、他の機能はすべて動作します。配信情報も含めて確認したい場合は、任意の静的サーバー経由で開いてください。
+### 自分のGitHub Pagesで公開する
 
-## フォークして使う場合
+リポジトリをフォークし、Settings → Pages で `main` / `(root)` を指定すれば、そのまま自分のURLで公開できます。配信情報を更新し続けたい場合のみ、次の設定が必要です。
+
+### 動作環境
+
+Chrome / Edge / Firefox / Safari の現行版。スマートフォンでも動作します。
+
+## フォークして配信情報を更新する場合
 
 配信情報の更新を動かすには、以下の設定が必要です。表示するだけなら不要です。
 
@@ -111,7 +182,7 @@ node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 
 | 対象 | ライセンス |
 | --- | --- |
-| `anime.html` / `index.html` / `scripts/` / `.github/` | MIT |
+| `index.html` / `anime.html` / `scripts/` / `.github/` | MIT |
 | `data/streaming.json` | **MIT対象外**。TMDB / JustWatch に帰属 |
 | `assets/tmdb.svg` | **MIT対象外**。TMDBの商標（帰属表示のために同梱） |
 
