@@ -124,6 +124,10 @@
   .sheet dd{margin:0}
   .sheet .desc{font-size:12.5px;white-space:pre-wrap;max-height:230px;overflow:auto;
     border-top:1px solid var(--border);padding-top:10px;margin-top:14px}
+  .sheet .src{white-space:normal;font-size:11px;color:var(--muted);margin:12px 0 0;
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .sheet .src a{color:var(--muted)}
+  .sheet .src button{padding:2px 8px;font-size:11px}
   .sheet .links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .sheet .links a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--border);
     padding:4px 10px;border-radius:6px}
@@ -703,6 +707,93 @@ function rangeLabel(start){
   return (start.getMonth() + 1) + "/" + start.getDate() + " 〜 " + (end.getMonth() + 1) + "/" + end.getDate() + " の放送予定";
 }
 
+/* ---------- 日本語のあらすじ（日本語版Wikipediaの導入部） ---------- */
+var WIKI_API = "https://ja.wikipedia.org/w/api.php";
+var wikiCache = {};                    /* 作品ID -> {text,title,url} または false */
+
+/* 括弧書き・季数表記を落として作品名の芯を取り出す */
+function baseTitle(s){
+  return String(s || "")
+    .replace(/[（(][^）)]*[）)]/g, "")
+    .replace(/第[0-9０-９]+期|シーズン\s*[0-9０-９]+|season\s*[0-9]+|[0-9]+(st|nd|rd|th)\s*season/gi, "")
+    .replace(/[ⅠⅡⅢⅣⅤⅥ]/g, "")
+    .trim();
+}
+/* 照合用の正規化。記号は種類が多いので「残す文字」を指定する */
+function normTitle(s){
+  return baseTitle(s)
+    .replace(/[^0-9A-Za-zぁ-ゖァ-ヺー一-鿿]/g, "")
+    .toLowerCase();
+}
+function wikiUrl(params){
+  var q = "action=query&format=json&origin=*&prop=extracts&exintro=1&explaintext=1&redirects=1";
+  return WIKI_API + "?" + q + "&" + params;
+}
+function pickPage(json, want){
+  var pages = json && json.query && json.query.pages;
+  if (!pages) return null;
+  /* 検索結果は index が検索順位を持つのでその順に見る */
+  var list = Object.keys(pages).map(function(k){ return pages[k]; })
+    .sort(function(a, b){ return (a.index || 0) - (b.index || 0); });
+  for (var i = 0; i < list.length; i++){
+    var p = list[i];
+    if (!p || p.missing !== undefined || !p.extract) continue;
+    var text = p.extract.trim();
+    if (text.length < 30 || text.indexOf("曖昧さ回避") >= 0) continue;
+    /* 別作品の記事を拾わないよう、タイトルの包含関係を確認する */
+    if (want){
+      var a = normTitle(p.title), b = normTitle(want);
+      if (a.indexOf(b) < 0 && b.indexOf(a) < 0) continue;
+    }
+    return {text: text, title: p.title,
+            url: "https://ja.wikipedia.org/wiki/" + encodeURIComponent(p.title)};
+  }
+  return null;
+}
+function loadWiki(m){
+  if (wikiCache[m.id] !== undefined) return Promise.resolve(wikiCache[m.id]);
+  var t = m.title.native;
+  if (!t) return Promise.resolve(false);
+  var base = baseTitle(t);
+  function byTitle(name){
+    return fetch(wikiUrl("titles=" + encodeURIComponent(name)))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ return pickPage(j, t); });
+  }
+  return byTitle(t)
+    .then(function(hit){ return hit || (base !== t ? byTitle(base) : null); })
+    .then(function(hit){
+      if (hit) return hit;
+      /* 見つからなければ検索で最有力の3件から照合する */
+      return fetch(wikiUrl("generator=search&gsrnamespace=0&gsrlimit=3&gsrsearch=" +
+                           encodeURIComponent(base)))
+        .then(function(r){ return r.json(); })
+        .then(function(j2){ return pickPage(j2, base); });
+    })
+    .then(function(hit){ wikiCache[m.id] = hit || false; return wikiCache[m.id]; })
+    .catch(function(){ return false; });
+}
+
+var curDesc = {id: 0, en: "", ja: "", loading: false, forceEn: false};
+function renderDesc(){
+  var box = el("desc");
+  if (!box) return;
+  var showJa = curDesc.ja && !curDesc.forceEn;
+  var body = showJa ? curDesc.ja : (curDesc.en || "あらすじは登録されていません。");
+  var src = "";
+  if (curDesc.ja){
+    src = showJa
+      ? '<p class="src"><span>出典: <a href="' + esc(curDesc.url) + '" target="_blank" rel="noopener">ウィキペディア日本語版「' + esc(curDesc.wtitle) + '」</a>（CC BY-SA）</span>' +
+        (curDesc.en ? '<button id="descToggle">英語の原文</button>' : "") + "</p>"
+      : '<p class="src"><span>出典: AniList（英語）</span><button id="descToggle">日本語の概要</button></p>';
+  } else if (curDesc.loading){
+    src = '<p class="src"><span>日本語の概要を検索中…</span></p>';
+  }
+  box.innerHTML = esc(body) + src;
+  var b = el("descToggle");
+  if (b) b.onclick = function(){ curDesc.forceEn = !curDesc.forceEn; renderDesc(); };
+}
+
 function plain(desc){
   return String(desc || "")
     .replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")
@@ -756,9 +847,18 @@ function openDetail(id){
       '<div class="links">' + trailer +
         '<a href="' + esc(m.siteUrl) + '" target="_blank" rel="noopener">AniList</a>' + links + "</div>" +
       "</div></div>" +
-    '<div class="desc">' + esc(plain(m.description) || "あらすじは登録されていません。") + "</div></div>";
+    '<div class="desc" id="desc"></div></div>';
   el("modal").classList.add("open");
   el("closeBtn").onclick = closeDetail;
+
+  curDesc = {id: m.id, en: plain(m.description), ja: "", loading: true, forceEn: false};
+  renderDesc();
+  loadWiki(m).then(function(w){
+    if (curDesc.id !== m.id) return;          /* 別の作品に切り替わっていたら破棄 */
+    curDesc.loading = false;
+    if (w){ curDesc.ja = w.text; curDesc.url = w.url; curDesc.wtitle = w.title; }
+    renderDesc();
+  });
 }
 function closeDetail(){ el("modal").classList.remove("open"); }
 
