@@ -97,6 +97,7 @@
   .slot .n{font-size:11.5px;line-height:1.35;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .slot .e{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .slot .fv{color:#e0a800;margin-left:3px}
   .calnote{font-size:11px;color:var(--muted);margin:12px 2px 0;grid-column:1/-1}
   @media(max-width:900px){ .cal{grid-template-columns:repeat(2,minmax(0,1fr))} }
   .notice{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;
@@ -212,6 +213,7 @@
     <div class="calbar">
       <label><input type="checkbox" id="calSeason" checked>今季の作品のみ</label>
       <label><input type="checkbox" id="calNoShort" checked>短編・特番・OVAを除く</label>
+      <label><input type="checkbox" id="calFav">お気に入りのみ</label>
     </div>
   </div>
 
@@ -637,6 +639,7 @@ function loadCalendar(force){
 
 function calFilter(r){
   var m = r.m;
+  if (el("calFav").checked && !favs[m.id]) return false;
   if (el("calSeason").checked && !(m.seasonYear === CUR.year && m.season === CUR.season)) return false;
   if (el("calNoShort").checked && SHORT_FORMATS.indexOf(m.format) >= 0) return false;
   return true;
@@ -687,8 +690,9 @@ function renderCalendar(){
       var img = m.coverImage && m.coverImage.medium
         ? '<img loading="lazy" src="' + esc(m.coverImage.medium) + '" alt="">' : "";
       var sc = m.averageScore ? " ・ " + (m.averageScore / 10).toFixed(1) : "";
+      var star = favs[m.id] ? '<span class="fv">★</span>' : "";
       return '<div class="slot" data-id="' + m.id + '">' + img +
-        '<div class="info"><div class="t">' + airTime(r.at) + "</div>" +
+        '<div class="info"><div class="t">' + airTime(r.at) + star + "</div>" +
         '<div class="n">' + esc(title(m)) + "</div>" +
         '<div class="e">第' + r.ep + "話" + sc + "</div></div></div>";
     }).join("");
@@ -698,8 +702,10 @@ function renderCalendar(){
       (slots || '<div class="none">放送なし</div>') + "</section>";
   }).join("") +
   '<p class="calnote">' + rangeLabel(start) + (cal.loading ? "（読み込み中…）" : "") +
-  "　表示 " + shown + " 本 / 取得 " + cal.rows.length +
-  " 本　深夜帯は24時制で表示しています（25:30 = 翌1:30）。時刻は端末のタイムゾーン基準です。</p>";
+  "　表示 " + shown + " 本 / 取得 " + cal.rows.length + " 本" +
+  (shown === 0 && el("calFav").checked && !cal.loading
+    ? "　お気に入りに登録した作品は今週の放送予定にありません。" : "") +
+  "　深夜帯は24時制で表示しています（25:30 = 翌1:30）。時刻は端末のタイムゾーン基準です。</p>";
 }
 function rangeLabel(start){
   var end = new Date(start.getTime());
@@ -804,10 +810,20 @@ function ymd(d){
   if (!d || !d.year) return "—";
   return d.year + "/" + (d.month || "?") + "/" + (d.day || "?");
 }
+function findMedia(id){
+  var list = currentList();
+  for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+  return cal.byId[id] || favs[id] || null;
+}
+function renderFavBtn(id){
+  var b = el("favBtn");
+  if (!b) return;
+  var on = !!favs[id];
+  b.textContent = on ? "★ 登録済み" : "☆ お気に入り";
+  b.className = "close" + (on ? " on" : "");
+}
 function openDetail(id){
-  var list = currentList(), m = null;
-  for (var i = 0; i < list.length; i++) if (list[i].id === id) { m = list[i]; break; }
-  if (!m) m = cal.byId[id] || favs[id];
+  var m = findMedia(id);
   if (!m) return;
   var trailer = m.trailer && m.trailer.site === "youtube"
     ? '<a href="https://www.youtube.com/watch?v=' + esc(m.trailer.id) + '" target="_blank" rel="noopener">PV</a>' : "";
@@ -825,6 +841,7 @@ function openDetail(id){
   el("sheet").innerHTML =
     (m.bannerImage ? '<div class="banner" style="background-image:url(' + esc(m.bannerImage) + ')"></div>' : "") +
     '<div class="inner"><button class="close" id="closeBtn">閉じる</button>' +
+    '<button class="close" id="favBtn" style="margin-right:8px"></button>' +
     "<h3>" + esc(title(m)) + "</h3>" +
     '<p class="nat">' + esc(m.title.romaji || "") +
       (m.title.english ? " / " + esc(m.title.english) : "") + "</p>" +
@@ -850,6 +867,8 @@ function openDetail(id){
     '<div class="desc" id="desc"></div></div>';
   el("modal").classList.add("open");
   el("closeBtn").onclick = closeDetail;
+  renderFavBtn(m.id);
+  el("favBtn").onclick = function(){ toggleFav(m.id); };
 
   curDesc = {id: m.id, en: plain(m.description), ja: "", loading: true, forceEn: false};
   renderDesc();
@@ -865,14 +884,15 @@ function closeDetail(){ el("modal").classList.remove("open"); }
 function toggleFav(id){
   if (favs[id]) delete favs[id];
   else {
-    var list = currentList(), m = null;
-    for (var i = 0; i < list.length; i++) if (list[i].id === id) { m = list[i]; break; }
+    var m = findMedia(id);
     if (!m) return;
     favs[id] = m;
   }
   save(FAV_KEY, favs);
   renderFavCount();
   renderGrid();
+  renderFavBtn(id);
+  if (cal.rows.length) renderCalendar();
 }
 function renderFavCount(){
   var n = Object.keys(favs).length;
@@ -906,6 +926,51 @@ function readForm(){
   state.q = el("q").value;
 }
 
+/* ---------- 条件をURLに保存する（共有・ブックマーク・戻る操作に対応） ---------- */
+function validOpt(id, v){
+  if (!v) return "";
+  var s = el(id);
+  for (var i = 0; i < s.options.length; i++) if (s.options[i].value === v) return v;
+  return "";
+}
+function buildQuery(){
+  var p = [];
+  function add(k, v){ if (v) p.push(k + "=" + encodeURIComponent(v)); }
+  if (state.view !== "list") add("view", state.view);
+  var q = state.q.trim();
+  add("q", q);
+  /* 今季のままなら年・季節は書かない（リンクが常に「今季」を指すように） */
+  var isCurrent = String(state.year) === String(CUR.year) && state.season === CUR.season;
+  if (!q && !isCurrent){
+    p.push("year=" + encodeURIComponent(state.year || ""));
+    p.push("season=" + encodeURIComponent(state.season || ""));
+  }
+  if (state.sort !== "POPULARITY_DESC") add("sort", state.sort);
+  add("format", state.format);
+  add("genre", state.genre);
+  add("score", state.minScore);
+  add("status", state.status);
+  return p.length ? "?" + p.join("&") : "";
+}
+function applyQuery(search){
+  var u = new URLSearchParams(search || "");
+  state.q = u.get("q") || "";
+  state.year = u.has("year") ? (u.get("year") || "") : CUR.year;
+  state.season = u.has("season") ? validOpt("season", u.get("season")) : CUR.season;
+  state.sort = validOpt("sort", u.get("sort")) || "POPULARITY_DESC";
+  state.format = validOpt("format", u.get("format"));
+  state.genre = validOpt("genre", u.get("genre"));
+  state.minScore = validOpt("minScore", u.get("score"));
+  state.status = u.get("status") === "RELEASING" ? "RELEASING" : "";
+  if (state.year && !/^(19|20)[0-9]{2}$/.test(String(state.year))) state.year = CUR.year;
+  var v = u.get("view");
+  return (v === "cal" || v === "fav") ? v : "list";
+}
+function syncUrl(push){
+  var url = location.pathname + buildQuery();
+  try { history[push ? "pushState" : "replaceState"]({}, "", url); } catch(e){}
+}
+
 var PRESETS = {
   current: function(){ return {year: CUR.year, season: CUR.season, sort: "POPULARITY_DESC", status: "", q: "", minScore: ""}; },
   prev: function(){ var s = shiftSeason(CUR.year, CUR.season, -1); return {year: s.year, season: s.season, sort: "POPULARITY_DESC", status: "", q: "", minScore: ""}; },
@@ -920,6 +985,8 @@ Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), functio
     state.format = ""; state.genre = "";
     Object.keys(p).forEach(function(k){ state[k] = p[k]; });
     syncForm();
+    state.view = "list";
+    syncUrl(true);
     reset();
   };
 });
@@ -928,18 +995,47 @@ el("toggleFilters").onclick = function(){
   var open = !el("filters").classList.toggle("collapsed");
   this.textContent = "詳細な絞り込み " + (open ? "▴" : "▾");
 };
-el("apply").onclick = function(){ readForm(); state.status = ""; reset(); };
+el("apply").onclick = function(){
+  readForm();
+  state.status = "";
+  state.view = "list";
+  syncUrl(true);
+  reset();
+};
 el("q").addEventListener("keydown", function(e){ if (e.key === "Enter") el("apply").click(); });
 el("reload").onclick = refresh;
 window.addEventListener("online", function(){ if (!el("notice").hidden) refresh(); });
 window.addEventListener("offline", function(){
   showNotice("オフラインになりました。表示中のデータは最後に取得した内容です。");
 });
-el("tabList").onclick = function(){ setView("list"); };
-el("tabFav").onclick = function(){ setView("fav"); };
-el("tabCal").onclick = function(){ setView("cal"); };
-el("calSeason").onchange = renderCalendar;
-el("calNoShort").onchange = renderCalendar;
+el("tabList").onclick = function(){ setView("list"); syncUrl(true); };
+el("tabFav").onclick = function(){ setView("fav"); syncUrl(true); };
+el("tabCal").onclick = function(){ setView("cal"); syncUrl(true); };
+window.addEventListener("popstate", function(){
+  var v = applyQuery(location.search);
+  syncForm();
+  reset();
+  if (v !== "list") setView(v);
+});
+/* 曜日表の絞り込みは端末に記憶させる */
+var CALPREF_KEY = "animeCalPref_v1";
+(function initCalPref(){
+  var p = load(CALPREF_KEY, {});
+  if (p.season !== undefined) el("calSeason").checked = !!p.season;
+  if (p.noShort !== undefined) el("calNoShort").checked = !!p.noShort;
+  el("calFav").checked = !!p.fav;
+})();
+function onCalPrefChange(){
+  save(CALPREF_KEY, {
+    season: el("calSeason").checked,
+    noShort: el("calNoShort").checked,
+    fav: el("calFav").checked
+  });
+  renderCalendar();
+}
+el("calSeason").onchange = onCalPrefChange;
+el("calNoShort").onchange = onCalPrefChange;
+el("calFav").onchange = onCalPrefChange;
 el("cal").addEventListener("click", function(e){
   var slot = e.target.closest(".slot");
   if (slot) openDetail(Number(slot.dataset.id));
@@ -959,9 +1055,11 @@ if (autoLoadOn){
   }, {rootMargin: "300px"}).observe(el("more"));
 }
 
+var initView = applyQuery(location.search);
 syncForm();
 renderFavCount();
 reset();
+if (initView !== "list") setView(initView);
 </script>
 </body>
 </html>
