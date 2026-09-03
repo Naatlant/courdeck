@@ -1,126 +1,148 @@
-# アニメまとめ
+# Anime Matome
 
-外部APIから今季・過去のアニメ情報を自動取得し、一覧・集計・週間放送スケジュール・国内の配信状況として表示するWebアプリです。
+*日本語版は [README.ja.md](README.ja.md) をご覧ください。*
 
-- **紹介ページ**: https://naatlant.github.io/anime-matome/
-- **アプリ本体**: https://naatlant.github.io/anime-matome/anime.html
+A single-file web app that collects seasonal anime from public APIs and shows them as a
+browsable list, a weekly broadcast schedule, and — the part you won't find in most anime
+trackers — **where each title is actually streaming in Japan**.
 
-アプリ本体は依存ライブラリもビルドも不要な単一HTMLファイルです。閲覧者側にAPIキーは要りません。
+- **Landing page**: https://naatlant.github.io/anime-matome/
+- **App**: https://naatlant.github.io/anime-matome/anime.html
 
-## 機能
+No build step, no framework, no API key required for visitors. The app itself is one HTML
+file you can open in a browser.
 
-| 機能 | 内容 |
+> **Note**: the user interface is in Japanese. The streaming availability is Japan-only,
+> which is the point — services like dAnime, U-NEXT and FOD rarely show up in
+> international anime databases.
+
+## Features
+
+| Feature | Description |
 | --- | --- |
-| 今季アニメの自動取得 | アクセス日から放送シーズンを判定して表示。前季 / 来季 / 放送中の話題作 / 歴代トップ / 年別ベストをプリセットで切り替え |
-| 絞り込み | 年（1960年〜）× 季節 × 並び順6種 × 放送形式 × ジャンル × 最低スコア × キーワード検索 |
-| 自動集計 | 件数・平均スコア・放送中本数、ジャンル / 制作会社 / 原作媒体の分布 |
-| 週間放送スケジュール | 今週7日分を曜日別・時刻順に表示。放送日は朝5時始まりで区切り、深夜帯は24時制表記（25:30 = 翌1:30） |
-| **国内の配信サービス** | dアニメ / Prime Video / U-NEXT / Netflix / Hulu など、日本で視聴できるサービスを表示（6,152作品） |
-| **日本語のあらすじ** | 日本語版Wikipediaの導入部を取得して表示。記事が無い作品はAniListの英語説明にフォールバック |
-| **ホバープレビュー** | カードにカーソルを合わせると、バナー画像・スコア・次回放送を含む拡大パネルを表示 |
-| 詳細表示 | 放送期間、次回放送日時、制作会社、原作媒体、PV、公式・配信リンク |
-| お気に入り | localStorage に保存。曜日表を「お気に入りのみ」に絞り込める |
-| **条件のURL保存** | 絞り込み条件と表示タブがURLに入り、共有・ブックマーク・ブラウザの戻る操作に対応 |
-| 自動読み込み | スクロールに応じて次のページを自動取得（連続10ページで一旦停止） |
-| オフライン対応 | 通信失敗時は直近のキャッシュへ自動フォールバックし、いつ時点のデータかを表示 |
+| Seasonal listing | Detects the current broadcast season from the visitor's date. One-click presets for previous / next season, currently airing, all-time top, and best of the year |
+| Filtering | Year (1960–) × season × 6 sort orders × format × genre × minimum score × keyword search |
+| Automatic stats | Title count, average score, number currently airing, plus distribution by genre / studio / source material |
+| Weekly schedule | This week's broadcasts by day of week. Days start at 5 a.m. and late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning) |
+| **Streaming in Japan** | dAnime, Prime Video, U-NEXT, Netflix, Hulu and others, for 6,152 titles |
+| **Japanese synopses** | The upstream synopsis is English only, so the app pulls the lead section of the Japanese Wikipedia article and falls back to English when no article matches |
+| **Hover preview** | Hovering a card opens an enlarged panel with the banner art, score, streaming services and next episode |
+| Details | Air period, next episode, studio, source material, trailer, official and streaming links |
+| Favorites | Stored in localStorage. The weekly schedule can be filtered down to favorites only |
+| **Shareable URLs** | Filters and the active tab live in the query string, so any view can be bookmarked, shared, and navigated with the browser's back button |
+| Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
+| Offline tolerance | Falls back to the most recent cached response and tells you how old it is |
 
-レスポンシブ対応（PC / タブレット / スマートフォン）、OSのダークモード設定に自動追従します。
+Responsive down to phone width, and follows the OS light/dark preference.
 
-## 技術構成
+## Tech stack
 
-| 区分 | 内容 |
+| Area | Details |
 | --- | --- |
-| フロントエンド | 単一HTMLファイル（`anime.html`、約1,200行）。HTML + CSS + JavaScript のみ、依存パッケージなし |
-| 作品情報 | AniList GraphQL API（`media` / `airingSchedules` の2クエリ、フィールド定義は共有） |
-| あらすじ | 日本語版Wikipedia API（完全一致 → 季数を除いた題名 → 検索の3段階で照合） |
-| 配信情報 | TMDB API（データ提供元は JustWatch）。GitHub Actions で取得し JSON として配信 |
-| キャッシュ | localStorage に6時間保持（AniList のレート制限 30req/分 対策） |
-| 表示 | CSS Grid によるレスポンシブ、`prefers-color-scheme` によるダークモード |
+| Front end | One HTML file (`anime.html`, ~1,200 lines). HTML + CSS + vanilla JavaScript, zero dependencies |
+| Anime data | [AniList](https://anilist.co) GraphQL API (two queries sharing one field fragment) |
+| Synopses | Japanese Wikipedia API (exact title → title without season markers → search) |
+| Streaming | TMDB API, data sourced from JustWatch. Fetched by GitHub Actions, served as a static JSON file |
+| Caching | localStorage, 6 hours (AniList allows 30 requests/minute) |
+| Layout | CSS Grid, `prefers-color-scheme` |
 
-## 配信情報の仕組み
+## How the streaming data works
 
-配信情報だけは実行時にAPIを叩きません。GitHub Actions が事前に取得したJSONをアプリが読み込みます。**APIキーはGitHub Secretsに置くため、公開ページには一切出ません。**
+The app never calls the streaming API at runtime. GitHub Actions fetches the data ahead of
+time and commits a static JSON file. **The API key lives in GitHub Secrets and never reaches
+the published page.**
 
 ```mermaid
 flowchart LR
-    A[GitHub Actions<br/>日次 / 週次] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
+    A[GitHub Actions<br/>daily / weekly] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
     B --> C[TMDB API<br/>watch/providers region=JP]
-    C --> D[data/streaming.json<br/>6,152作品 / 235KB]
-    D --> E[anime.html<br/>閲覧者のブラウザ]
+    C --> D[data/streaming.json<br/>6,152 titles / 235 KB]
+    D --> E[anime.html<br/>visitor's browser]
 ```
 
-分割クールや第N期は同じTMDBシリーズを指すため、TMDB ID単位で重複排除しています（8,123件 → 5,452リクエスト）。
+Split-cour releases and sequels point at the same TMDB series, so requests are deduplicated
+by TMDB ID before fetching (8,123 entries → 5,452 requests).
 
-| 実行 | スケジュール | 内容 |
+| Run | Schedule | Scope |
 | --- | --- | --- |
-| 日次 | 毎日 03:00 JST | 前季〜来季＋歴代トップのみ取得し、既存データにマージ（約250リクエスト） |
-| 週次 | 日曜 03:30 JST | 全作品を再取得して置き換え（約5,450リクエスト・6分） |
+| Daily | 03:00 JST | Previous/current/next season plus all-time top, merged into the existing data (~250 requests) |
+| Weekly | Sunday 03:30 JST | Full refresh of every mapped title (~5,450 requests, about 6 minutes) |
 
-手動実行時に `mode` へ `all` を指定すると、任意のタイミングで全件更新できます。
+### Coverage
 
-### カバー率
+Only titles that exist in the ID mapping can carry streaming data, so older shows drop off.
 
-対応表にTMDB IDが存在する作品のみが対象です。古い作品ほど下がります。
-
-| 対象 | 配信情報を表示できた割合 |
+| Sample | Titles with streaming data |
 | --- | --- |
-| 歴代トップ50 | 88% |
-| 2006年春 | 82% |
-| 2020年春 | 76% |
-| 1998年春 | 42% |
+| All-time top 50 | 88% |
+| Spring 2006 | 82% |
+| Spring 2020 | 76% |
+| Spring 1998 | 42% |
 
-## ファイル構成
+## Repository layout
 
 ```
-anime.html                        アプリ本体（単一ファイル）
-index.html                        紹介ページ
-data/streaming.json               国内の配信情報（Actions が生成）
-scripts/fetch-streaming.mjs       配信情報の取得スクリプト
-.github/workflows/streaming.yml   日次 / 週次の更新ワークフロー
+anime.html                        the app (single file)
+index.html                        landing page
+data/streaming.json               Japanese streaming availability (generated by Actions)
+scripts/fetch-streaming.mjs       fetch script
+.github/workflows/streaming.yml   daily / weekly update workflow
+assets/                           TMDB logo, social card
 ```
 
-## ローカルでの実行
+## Running locally
 
 ```
 git clone https://github.com/Naatlant/anime-matome.git
 ```
 
-`anime.html` をブラウザで開けば動作します。ただし **`file://` で開いた場合は配信情報だけ表示されません**。ブラウザがローカルファイルへの `fetch` を禁止しているためで、他の機能はすべて動作します。配信情報も含めて確認したい場合は、任意の静的サーバー経由で開いてください。
+Open `anime.html` in a browser. Everything works **except the streaming badges**, because
+browsers block `fetch` for local files. Serve the directory over HTTP if you want those too.
 
-## フォークして使う場合
+## Forking
 
-配信情報の更新を動かすには、以下の設定が必要です。表示するだけなら不要です。
+You only need this if you want the streaming data to keep updating. Displaying the existing
+data requires nothing.
 
-1. [TMDB](https://www.themoviedb.org/settings/api) で無料のAPIキーを取得する（Developer を選択）
-2. リポジトリの Settings → Secrets and variables → Actions で `TMDB_API_KEY` を登録する
-3. Settings → Actions → General → Workflow permissions を **Read and write permissions** にする
+1. Get a free API key from [TMDB](https://www.themoviedb.org/settings/api) (choose *Developer*)
+2. Add it as a repository secret named `TMDB_API_KEY`
+3. Set Settings → Actions → General → Workflow permissions to **Read and write permissions**
 
-ローカルで手動実行する場合は、リポジトリ直下に `.tmdb_key` というファイルを作ってキーだけを書いてください（`.gitignore` 済み）。
+To run the script by hand, put the key in a `.tmdb_key` file at the repository root
+(already git-ignored).
 
 ```
-node scripts/fetch-streaming.mjs        # 前季〜来季＋歴代トップ（マージ）
-node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
+node scripts/fetch-streaming.mjs        # current seasons, merged
+node scripts/fetch-streaming.mjs --all  # every title, full replace
 ```
 
-## ライセンス
+## License
 
-ソースコードは [MIT License](LICENSE) です。ただし**適用範囲はこのリポジトリで書かれたコードに限られます**。
+The source code is [MIT](LICENSE) — but **the license covers only the code written in this
+repository**.
 
-| 対象 | ライセンス |
+| Path | License |
 | --- | --- |
-| `anime.html` / `index.html` / `scripts/` / `.github/` | MIT |
-| `data/streaming.json` | **MIT対象外**。TMDB / JustWatch に帰属 |
-| `assets/tmdb.svg` | **MIT対象外**。TMDBの商標（帰属表示のために同梱） |
+| `anime.html`, `index.html`, `scripts/`, `.github/` | MIT |
+| `data/streaming.json` | **Not MIT.** Belongs to TMDB / JustWatch |
+| `assets/tmdb.svg` | **Not MIT.** TMDB trademark, bundled for the attribution their terms require |
 
-配信データは [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use) に従います。同規約はTMDBコンテンツの再許諾（sublicense）を認めていないため、このJSONを再利用する場合は、**ご自身でTMDBのAPIキーを取得し、同規約を遵守してください**。商用利用はできません（広告収入や集客目的の利用も商用と見なされます）。
+The streaming data is governed by the
+[TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use), which do not permit
+sublicensing TMDB content. If you want to reuse that data, **get your own TMDB API key and
+comply with those terms yourself**. Commercial use is not permitted, and TMDB counts ad
+revenue and traffic generation as commercial.
 
-## クレジット
+## Credits
 
-- 作品情報・画像: [AniList](https://anilist.co)
-- あらすじ: [ウィキペディア日本語版](https://ja.wikipedia.org/)（CC BY-SA）
-- 配信情報: [![TMDB](assets/tmdb.svg)](https://www.themoviedb.org/) / JustWatch
-- ID対応表: [Fribb/anime-lists](https://github.com/Fribb/anime-lists)
+- Titles, artwork, schedules: [AniList](https://anilist.co)
+- Synopses: [Japanese Wikipedia](https://ja.wikipedia.org/), CC BY-SA
+- Streaming availability: [![TMDB](assets/tmdb.svg)](https://www.themoviedb.org/) / JustWatch
+- ID mapping: [Fribb/anime-lists](https://github.com/Fribb/anime-lists)
 
-> This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.
+> This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise
+> approved by TMDB.
 
-各作品の権利は権利者に帰属します。本リポジトリは非営利の公開ツールであり、表示内容の正確性を保証するものではありません。配信状況は変動するため、実際の視聴可否は各サービスでご確認ください。
+All rights to the individual works belong to their respective holders. This is a
+non-commercial project and makes no guarantee about the accuracy of what it displays.
+Streaming availability changes often — confirm on the service itself before relying on it.
