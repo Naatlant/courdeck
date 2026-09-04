@@ -38,8 +38,11 @@
     font-size:14px;line-height:1.6;}
   .wrap{max-width:1180px;margin:0 auto}
   h1{font-size:20px;margin:0;font-weight:600;letter-spacing:.02em}
-  .brand{display:flex;align-items:center;gap:9px;font-size:24px;letter-spacing:-.015em;
-    line-height:1}
+  .brand{margin:0;font-size:24px;letter-spacing:-.015em;line-height:1}
+  .brand a{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none;
+    border-radius:8px;transition:opacity .15s ease}
+  .brand a:hover{opacity:.8}
+  .brand a:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
   .brand .mark{width:30px;height:26px;flex:none}
   /* 束ねたカード。手前の1枚が今見ているクール。
      背景色で縁取りして、重なっても輪郭が分かるようにする */
@@ -139,6 +142,9 @@
   .card .svcs{margin-top:auto;padding-top:3px}
   .calbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
   .calbar label{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--text)}
+  .calnav{display:flex;gap:4px;align-items:center}
+  .calnav button{padding:4px 10px;font-size:12px}
+  .calnav button:disabled{opacity:.4}
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
   .day{background:var(--panel);border:1px solid var(--border);border-radius:10px;
     padding:8px;box-shadow:var(--shadow);min-width:0}
@@ -222,13 +228,13 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <h1 class="brand">
+    <h1 class="brand"><a href="./" id="home" data-i18n-title="home" title="最初の画面に戻る">
       <svg class="mark" viewBox="0 0 32 28" aria-hidden="true">
         <rect x="1.5" y="6" width="11" height="16" rx="2.4" transform="rotate(-17 7 14)"/>
         <rect x="8.5" y="5.5" width="11.5" height="17" rx="2.5" transform="rotate(-8 14.25 14)"/>
         <rect x="17" y="4.5" width="12.5" height="19" rx="2.7" class="lit"/>
       </svg><span class="wm">Cour<span>deck</span></span>
-    </h1>
+    </a></h1>
     <div class="langsw" id="langsw">
       <button data-lang="ja">日本語</button>
       <button data-lang="en">English</button>
@@ -281,7 +287,7 @@
         <option value="80" data-i18n="sc.80">80以上</option>
         <option value="85" data-i18n="sc.85">85以上</option>
       </select></label>
-      <label class="f grow"><span data-i18n="f.keyword">キーワード</span><input id="q" type="search" data-i18n-ph="ph.q" placeholder="作品名で検索（全期間から）"></label>
+      <label class="f grow"><span data-i18n="f.keyword">キーワード</span><input id="q" type="search" data-i18n-ph="ph.q" data-i18n-title="searchTip" placeholder="作品名で検索（全期間から）"></label>
       <button id="apply" class="primary" data-i18n="btn.apply">この条件で取得</button>
     </div>
   </div>
@@ -298,6 +304,11 @@
 
   <div class="panel" id="calBar" hidden>
     <div class="calbar">
+      <div class="calnav">
+        <button id="calPrev" data-i18n-title="cal.prev" title="前の週">◀</button>
+        <button id="calThis" data-i18n="cal.this">今週</button>
+        <button id="calNext" data-i18n-title="cal.next" title="次の週">▶</button>
+      </div>
       <label><input type="checkbox" id="calSeason" checked><span data-i18n="cal.season">今季の作品のみ</span></label>
       <label><input type="checkbox" id="calNoShort" checked><span data-i18n="cal.noshort">短編・特番・OVAを除く</span></label>
       <label><input type="checkbox" id="calFav"><span data-i18n="cal.fav">お気に入りのみ</span></label>
@@ -438,7 +449,9 @@ var I18N = {
     noDesc: "あらすじは登録されていません。", srcWiki: "出典: ウィキペディア日本語版",
     srcAni: "出典: AniList（英語）", showEn: "英語の原文", showJa: "日本語の概要",
     wikiSearching: "日本語の概要を検索中…", epNo: "第{n}話", nextEp: "次回 第{n}話",
-    openDetail: "{n} の詳細を開く", dash: "—"
+    openDetail: "{n} の詳細を開く", home: "最初の画面に戻る",
+    "cal.prev": "前の週", "cal.this": "今週", "cal.next": "次の週",
+    searchTip: "/ キーでここにフォーカス", dash: "—"
   },
   en: {
     "app.title": "Courdeck", lead: "Seasonal and past anime pulled from public APIs, with streaming availability for Japan.", credits: CREDITS_EN, langBtn: "日本語",
@@ -488,7 +501,9 @@ var I18N = {
     noDesc: "No synopsis available.", srcWiki: "Source: Japanese Wikipedia",
     srcAni: "Source: AniList (English)", showEn: "English original", showJa: "Japanese summary",
     wikiSearching: "Looking for a Japanese summary…", epNo: "Ep. {n}", nextEp: "Next: ep. {n}",
-    openDetail: "Open details for {n}", dash: "—"
+    openDetail: "Open details for {n}", home: "Back to the start",
+    "cal.prev": "Previous week", "cal.this": "This week", "cal.next": "Next week",
+    searchTip: "Press / to focus", dash: "—"
   }
 };
 
@@ -942,21 +957,35 @@ function renderSummary(){
 var WEEK_JA = ["日","月","火","水","木","金","土"];
 function weekName(i){ return lang === "ja" ? WEEK_JA[i] : WEEK_EN[i]; }
 var SHORT_FORMATS = ["TV_SHORT", "MUSIC", "SPECIAL", "OVA"];
-var cal = {rows: [], byId: {}, loading: false, loaded: false, err: ""};
+var cal = {rows: [], byId: {}, loading: false, loaded: false, err: "", offset: 0, pending: false};
 
 /* 放送日は「朝5時始まり」で数える（深夜アニメの慣習に合わせる） */
-function calStart(){
+function broadcastToday(){
   var s = new Date();
   if (s.getHours() < 5) s.setDate(s.getDate() - 1);
   s.setHours(5, 0, 0, 0);
   return s;
 }
+/* cal.offset 週分ずらした表示開始日 */
+function calStart(){
+  var s = broadcastToday();
+  s.setDate(s.getDate() + cal.offset * 7);
+  return s;
+}
 function dayKey(d){ return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); }
 
+function setCalNav(on){
+  el("calPrev").disabled = !on;
+  el("calNext").disabled = !on;
+  el("calThis").disabled = !on || cal.offset === 0;
+}
 function loadCalendar(force){
-  if (cal.loading) return;
+  /* 読み込み中の要求は捨てずに覚えておく。連打で表示と内容がずれるのを防ぐ */
+  if (cal.loading){ cal.pending = true; return; }
   if (cal.loaded && !force){ renderCalendar(); return; }
+  var reqOffset = cal.offset;
   cal.loading = true; cal.rows = []; cal.byId = {}; cal.err = "";
+  setCalNav(false);
   hideNotice();
   renderCalendar();
   var start = calStart();
@@ -982,6 +1011,13 @@ function loadCalendar(force){
   }).then(function(){
     cal.loading = false;
     state.fresh = false;
+    setCalNav(true);
+    /* 読み込み中に週が変わっていたら取り直す */
+    if (cal.pending || cal.offset !== reqOffset){
+      cal.pending = false;
+      loadCalendar(true);
+      return;
+    }
     renderCalendar();
   });
 }
@@ -1033,7 +1069,7 @@ function renderCalendar(){
     shown++;
   });
 
-  var todayKey = dayKey(start);
+  var todayKey = dayKey(broadcastToday());   /* 週を送っても今日の位置は動かさない */
   box.innerHTML = days.map(function(o){
     var slots = o.rows.map(function(r){
       var m = r.m;
@@ -1452,6 +1488,17 @@ Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), functio
   };
 });
 
+function goHome(){
+  state.q = ""; state.year = CUR.year; state.season = CUR.season;
+  state.sort = "POPULARITY_DESC"; state.format = ""; state.genre = "";
+  state.minScore = ""; state.status = "";
+  syncForm();
+  setView("list");
+  syncUrl(true);
+  reset();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+el("home").onclick = function(e){ e.preventDefault(); goHome(); };
 el("toggleFilters").onclick = function(){
   var open = !el("filters").classList.toggle("collapsed");
   this.textContent = "詳細な絞り込み " + (open ? "▴" : "▾");
@@ -1494,6 +1541,14 @@ function onCalPrefChange(){
   });
   renderCalendar();
 }
+function goWeek(n){
+  cal.offset = n;
+  loadCalendar(true);
+}
+el("calPrev").onclick = function(){ goWeek(cal.offset - 1); };
+el("calNext").onclick = function(){ goWeek(cal.offset + 1); };
+el("calThis").onclick = function(){ goWeek(0); };
+el("calThis").disabled = true;
 el("calSeason").onchange = onCalPrefChange;
 el("calNoShort").onchange = onCalPrefChange;
 el("calFav").onchange = onCalPrefChange;
@@ -1521,7 +1576,23 @@ el("grid").addEventListener("click", function(e){
   if (card){ lastTrigger = card; openDetail(Number(card.dataset.id)); }
 });
 el("modal").addEventListener("click", function(e){ if (e.target.id === "modal") closeDetail(); });
-document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeDetail(); });
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape"){
+    if (el("modal").classList.contains("open")) closeDetail();
+    else if (document.activeElement === el("q")) el("q").blur();
+    return;
+  }
+  /* / で検索欄へ。入力中やモーダル表示中は無効 */
+  if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+  var a = document.activeElement;
+  if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
+  if (el("modal").classList.contains("open")) return;
+  e.preventDefault();
+  el("filters").classList.remove("collapsed");
+  el("toggleFilters").textContent = t("btn.filters") + " ▴";
+  el("q").focus();
+  el("q").select();
+});
 
 if (autoLoadOn){
   new IntersectionObserver(function(entries){

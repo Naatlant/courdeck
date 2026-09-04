@@ -23,7 +23,7 @@ file you can open in a browser.
 | Seasonal listing | Detects the current broadcast season from the visitor's date. One-click presets for previous / next season, currently airing, all-time top, and best of the year |
 | Filtering | Year (1960–) × season × 6 sort orders × format × genre × minimum score × keyword search |
 | Automatic stats | Title count, average score, number currently airing, plus distribution by genre / studio / source material |
-| Weekly schedule | This week's broadcasts by day of week. Days start at 5 a.m. and late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning) |
+| Weekly schedule | Seven days of broadcasts by day of week, **with navigation to other weeks**. Days start at 5 a.m. and late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning) |
 | **Streaming in Japan** | dAnime, Prime Video, U-NEXT, Netflix, Hulu and others, for 6,152 titles |
 | **Japanese synopses** | The upstream synopsis is English only, so the app pulls the lead section of the Japanese Wikipedia article and falls back to English when no article matches |
 | **Hover preview** | Hovering a card opens an enlarged panel with the banner art, score, streaming services and next episode |
@@ -31,6 +31,7 @@ file you can open in a browser.
 | Favorites | Stored in localStorage. The weekly schedule can be filtered down to favorites only |
 | **Shareable URLs** | Filters and the active tab live in the query string, so any view can be bookmarked, shared, and navigated with the browser's back button |
 | Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
+| Keyboard support | Tab through cards and open them with Enter / Space, `/` focuses the search box, and focus stays inside the dialog |
 | Offline tolerance | Falls back to the most recent cached response and tells you how old it is |
 | **English / Japanese** | Switch languages at any time. Titles, genres, formats and dates all follow the choice, and the setting is remembered and carried in the URL |
 
