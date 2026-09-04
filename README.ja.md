@@ -4,7 +4,7 @@
 
 外部APIから今季・過去のアニメ情報を自動取得し、一覧・集計・週間放送スケジュール・国内の配信状況として表示するWebアプリです。
 
-**→ https://naatlant.github.io/anime-matome/**
+**→ https://naatlant.github.io/courdeck/**
 
 アプリ本体は依存ライブラリもビルドも不要な単一HTMLファイルです。閲覧者側にAPIキーは要りません。
 
@@ -85,7 +85,7 @@ scripts/fetch-streaming.mjs       配信情報の取得スクリプト
 
 ### そのまま使う
 
-https://naatlant.github.io/anime-matome/ を開くだけです。**登録もインストールも不要**で、すぐに操作できます。
+https://naatlant.github.io/courdeck/ を開くだけです。**登録もインストールも不要**で、すぐに操作できます。
 
 - 開いた瞬間は今季のアニメが人気順で並びます
 - 上部のボタン（今季 / 前季 / 来季 / 放送中の話題作 / 歴代トップ / 今年のベスト）でよく使う条件に一発で切り替えられます
@@ -116,13 +116,13 @@ https://naatlant.github.io/anime-matome/ を開くだけです。**登録もイ�
 
 ```
 # 2016年秋アニメをスコア順で
-https://naatlant.github.io/anime-matome/?year=2016&season=FALL&sort=SCORE_DESC
+https://naatlant.github.io/courdeck/?year=2016&season=FALL&sort=SCORE_DESC
 
 # 今週の放送予定
-https://naatlant.github.io/anime-matome/?view=cal
+https://naatlant.github.io/courdeck/?view=cal
 
 # 歴代のSF作品でスコア80以上
-https://naatlant.github.io/anime-matome/?year=&season=&genre=Sci-Fi&score=80&sort=SCORE_DESC
+https://naatlant.github.io/courdeck/?year=&season=&genre=Sci-Fi&score=80&sort=SCORE_DESC
 ```
 
 年・季節を省略すると「その時点の今季」になります。**「今季アニメ」へのリンクとして貼っておけば、シーズンが変わっても自動で最新になります。**
@@ -132,7 +132,7 @@ https://naatlant.github.io/anime-matome/?year=&season=&genre=Sci-Fi&score=80&sor
 `iframe` でそのまま置けます。
 
 ```html
-<iframe src="https://naatlant.github.io/anime-matome/?view=cal&lang=ja"
+<iframe src="https://naatlant.github.io/courdeck/?view=cal&lang=ja"
         width="100%" height="800" style="border:0" loading="lazy"
         title="Courdeck"></iframe>
 ```
@@ -142,14 +142,14 @@ https://naatlant.github.io/anime-matome/?year=&season=&genre=Sci-Fi&score=80&sor
 アプリは1ファイルなので、ダウンロードするだけで動きます。
 
 ```
-curl -O https://naatlant.github.io/anime-matome/index.html
+curl -O https://naatlant.github.io/courdeck/index.html
 ```
 
 ブラウザで開けば、作品一覧・曜日表・検索はすべて動作します。ただし **`file://` で開くと配信情報だけ表示されません**。ブラウザがローカルファイルへの `fetch` を禁止しているためです。配信情報も見たい場合は、`data/streaming.json` も一緒に置いたうえで、任意の静的サーバー経由で開いてください。
 
 ```
-git clone https://github.com/Naatlant/anime-matome.git
-cd anime-matome
+git clone https://github.com/Naatlant/courdeck.git
+cd courdeck
 npx serve .        # 任意の静的サーバーで可
 ```
 

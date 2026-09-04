@@ -6,7 +6,7 @@ A single-file web app that collects seasonal anime from public APIs and shows th
 browsable list, a weekly broadcast schedule, and — the part you won't find in most anime
 trackers — **where each title is actually streaming in Japan**.
 
-**→ https://naatlant.github.io/anime-matome/**
+**→ https://naatlant.github.io/courdeck/**
 
 No build step, no framework, no API key required for visitors. The app itself is one HTML
 file you can open in a browser.
@@ -95,7 +95,7 @@ assets/                           TMDB logo, social card
 
 ### Just use it
 
-Open https://naatlant.github.io/anime-matome/. **No sign-up, no install.**
+Open https://naatlant.github.io/courdeck/. **No sign-up, no install.**
 
 - It opens on the current season, sorted by popularity
 - The buttons along the top jump to common views: this season, previous, next, trending now,
@@ -127,13 +127,13 @@ build links by hand.
 
 ```
 # Fall 2016, sorted by score
-https://naatlant.github.io/anime-matome/?year=2016&season=FALL&sort=SCORE_DESC
+https://naatlant.github.io/courdeck/?year=2016&season=FALL&sort=SCORE_DESC
 
 # This week's broadcast schedule
-https://naatlant.github.io/anime-matome/?view=cal&lang=en
+https://naatlant.github.io/courdeck/?view=cal&lang=en
 
 # All-time sci-fi rated 80 or above
-https://naatlant.github.io/anime-matome/?year=&season=&genre=Sci-Fi&score=80&sort=SCORE_DESC
+https://naatlant.github.io/courdeck/?year=&season=&genre=Sci-Fi&score=80&sort=SCORE_DESC
 ```
 
 Leave out `year` and `season` and the link always means "whatever is airing now" — **a link
@@ -142,7 +142,7 @@ you can post once and never update.**
 ### Embed it
 
 ```html
-<iframe src="https://naatlant.github.io/anime-matome/?view=cal&lang=en"
+<iframe src="https://naatlant.github.io/courdeck/?view=cal&lang=en"
         width="100%" height="800" style="border:0" loading="lazy"
         title="Courdeck"></iframe>
 ```
@@ -152,7 +152,7 @@ you can post once and never update.**
 The app is a single file, so downloading it is enough.
 
 ```
-curl -O https://naatlant.github.io/anime-matome/index.html
+curl -O https://naatlant.github.io/courdeck/index.html
 ```
 
 Opening it in a browser gives you the listing, the weekly schedule and search. Only the
@@ -161,8 +161,8 @@ files. To get those too, keep `data/streaming.json` alongside it and serve the f
 HTTP:
 
 ```
-git clone https://github.com/Naatlant/anime-matome.git
-cd anime-matome
+git clone https://github.com/Naatlant/courdeck.git
+cd courdeck
 npx serve .        # any static server works
 ```
 
