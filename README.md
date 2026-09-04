@@ -26,7 +26,7 @@ file you can open in a browser.
 | Filtering | Year (1960–) × season × 6 sort orders × format × genre × minimum score × keyword search |
 | Automatic stats | Title count, average score, number currently airing, plus distribution by genre / studio / source material |
 | Weekly schedule | Seven days of broadcasts by day of week, **with navigation to other weeks**. Days start at 5 a.m. and late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning) |
-| **Streaming in Japan** | dAnime, Prime Video, U-NEXT, Netflix, Hulu and others, for 6,152 titles |
+| **Streaming in Japan** | dAnime, Prime Video, U-NEXT, Netflix, Hulu and others, for 6,000+ titles |
 | **Japanese synopses** | The upstream synopsis is English only, so the app shows the lead section of the Japanese Wikipedia article instead. Articles are **resolved ahead of time by GitHub Actions**, so opening a title costs no request to Wikipedia. Anything not covered still falls back to a live lookup, and then to the English text |
 | **Preview panel** | An enlarged panel with the banner art, score, streaming services and next episode. Opens on hover with a mouse, on focus while tabbing, and from a button on the card on touch devices. `Escape` closes it |
 | Details | Air period, next episode, studio, source material, trailer, official and streaming links |
@@ -66,7 +66,7 @@ the next episodes to your calendar, all from here. Nothing leaves this browser.
 
 | Area | Details |
 | --- | --- |
-| Front end | One HTML file (`index.html`, ~1,450 lines). HTML + CSS + vanilla JavaScript, zero dependencies |
+| Front end | One HTML file (`index.html`). HTML + CSS + vanilla JavaScript, zero dependencies |
 | Anime data | [AniList](https://anilist.co) GraphQL API (two queries sharing one field fragment) |
 | Synopses | Japanese Wikipedia API (exact title → title without season markers → search), resolved ahead of time by GitHub Actions and served as a static JSON file |
 | Streaming | TMDB API, data sourced from JustWatch. Fetched by GitHub Actions, served as a static JSON file |
@@ -83,7 +83,7 @@ the published page.**
 flowchart LR
     A[GitHub Actions<br/>daily / weekly] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
     B --> C[TMDB API<br/>watch/providers region=JP]
-    C --> D[data/streaming.json<br/>6,152 titles / 106 KB]
+    C --> D[data/streaming.json<br/>6,000+ titles]
     D --> E[index.html<br/>visitor's browser]
 ```
 
@@ -114,14 +114,27 @@ AniList IDs and service names.
 
 ### Coverage
 
-Only titles that exist in the ID mapping can carry streaming data, so older shows drop off.
+Older shows drop off.
 
 | Sample | Titles with streaming data |
 | --- | --- |
-| All-time top 50 | 88% |
-| Spring 2006 | 82% |
-| Spring 2020 | 76% |
-| Spring 1998 | 42% |
+| All-time top 50 | 88% (44/50) |
+| Spring 2006 | 56% (59/106) |
+| Spring 2020 | 55% (50/91) |
+| Spring 1998 | 42% (20/48) |
+
+The denominator is **what the app actually lists**: every AniList title with `isAdult:false`,
+regardless of format (TV, film, OVA, ONA…). Restricting it to TV series lifts the figures by
+roughly ten points, but then the number no longer describes the screen anyone is looking at.
+
+These figures follow the contents of `data/streaming.json` and move whenever it updates. They can
+be measured again:
+
+```
+node scripts/coverage.mjs
+```
+
+(measured 2026-09-04)
 
 ## How the synopses work
 
@@ -174,6 +187,7 @@ data/synopses-overrides.json      hand-written fixes for wrong article matches
 scripts/fetch-streaming.mjs       streaming fetch script
 scripts/fetch-synopses.mjs        resolves Japanese Wikipedia articles ahead of time
 scripts/season-targets.mjs        picks the AniList IDs both fetch scripts work on
+scripts/coverage.mjs              re-measures the coverage table in this README
 scripts/date-logic.mjs            lifts the date functions out of index.html for the tests
 scripts/serve.mjs                 local static server for previewing
 test/date-logic.test.mjs          node:test suite covering the date handling
