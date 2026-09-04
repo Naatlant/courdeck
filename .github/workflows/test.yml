@@ -17,9 +17,9 @@ jobs:
       # テスト側でも TZ を設定しているが、実行環境を見て分かるようにここにも書いておく。
       TZ: Asia/Tokyo
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
