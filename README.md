@@ -310,7 +310,8 @@ repository**.
 
 | Path | License |
 | --- | --- |
-| `index.html`, `anime.html`, `scripts/`, `.github/` | MIT |
+| `index.html`, `anime.html`, `sw.js`, `manifest.webmanifest`, `scripts/`, `test/`, `.github/`, `data/synopses-overrides.json` | MIT |
+| `assets/icon-*.png`, `assets/og.png` | MIT. Artwork made in this repository — the logo and type, nothing else |
 | `data/streaming.json` | **Not MIT.** Belongs to TMDB / JustWatch |
 | `assets/tmdb.svg` | **Not MIT.** TMDB trademark, bundled for the attribution their terms require |
 | `assets/demo.gif` / `assets/screenshot-*.jpg` | **Not MIT.** Screenshots of the running app; the cover and banner art they contain belongs to the respective rights holders |
