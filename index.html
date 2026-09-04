@@ -774,6 +774,8 @@ var state = {
   autoPages: 0
 };
 var favs = load(FAV_KEY, {});
+/* 一度読み終えた表紙のURL。作り直しでちらつかせないための記録 */
+var imgSeen = {};
 
 function load(k, def){ try { return JSON.parse(localStorage.getItem(k)) || def; } catch(e){ return def; } }
 /* 保存できたかを返す。容量不足で書けなかった場合に呼び出し側が気づけるようにする */
@@ -994,8 +996,12 @@ function renderGrid(){
   var list = currentList();
   el("grid").innerHTML = list.map(function(m){
     var on = favs[m.id] ? " on" : "";
-    var img = m.coverImage && m.coverImage.large
-      ? '<img loading="lazy" src="' + esc(m.coverImage.large) + '" alt="">' : "";
+    /* 一度読み終えた表紙は最初から表示状態で作る。作り直しのたびに
+       透明から出し直すと、画面全体がちらつく */
+    var src = (m.coverImage && m.coverImage.large) || "";
+    var img = src
+      ? '<img loading="lazy"' + (imgSeen[src] ? ' class="on"' : "") +
+        ' src="' + esc(src) + '" alt="">' : "";
     var sc = m.averageScore
       ? '<span class="score' + (m.averageScore >= 80 ? " high" : "") + '">' +
         (m.averageScore / 10).toFixed(1) + "</span>"
@@ -1552,6 +1558,27 @@ function trapFocus(e){
 }
 document.addEventListener("keydown", trapFocus);
 
+/* ★の見た目だけを書き換える。★1つのために一覧を作り直すと、カード全部の
+   画像が作られ直して画面がちらつく（スマートフォンで顕著）。
+   並び自体が変わる場合だけ、呼び出し側で作り直す */
+function updateFavMarks(id){
+  var on = !!favs[id];
+  var b = el("grid").querySelector('[data-fav="' + id + '"]');
+  if (b) b.classList.toggle("on", on);
+  Array.prototype.forEach.call(
+    el("cal").querySelectorAll('.slot[data-id="' + id + '"] .t'), function(t){
+      var mark = t.querySelector(".fv");
+      if (on && !mark){
+        var s = document.createElement("span");
+        s.className = "fv";
+        s.textContent = "★";
+        t.appendChild(s);
+      } else if (!on && mark){
+        mark.parentNode.removeChild(mark);
+      }
+    });
+}
+
 function toggleFav(id){
   if (favs[id]) delete favs[id];
   else {
@@ -1561,9 +1588,11 @@ function toggleFav(id){
   }
   save(FAV_KEY, favs);
   renderFavCount();
-  renderGrid();
   renderFavBtn(id);
-  if (cal.rows.length) renderCalendar();
+  updateFavMarks(id);
+  /* 並んでいる中身そのものが変わるときだけ作り直す */
+  if (state.view === "fav") renderGrid();
+  if (cal.rows.length && el("calFav").checked) renderCalendar();
 }
 function renderFavCount(){
   var n = Object.keys(favs).length;
@@ -1993,7 +2022,9 @@ function activateKey(e, selector){
   openDetail(Number(el2.dataset.id));
 }
 el("grid").addEventListener("load", function(e){
-  if (e.target.tagName === "IMG") e.target.classList.add("on");
+  if (e.target.tagName !== "IMG") return;
+  e.target.classList.add("on");
+  imgSeen[e.target.src] = true;      /* 次に作り直すときは即表示にする */
 }, true);
 el("grid").addEventListener("keydown", function(e){ activateKey(e, ".card"); });
 el("cal").addEventListener("keydown", function(e){ activateKey(e, ".slot"); });
