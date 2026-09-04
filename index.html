@@ -145,6 +145,12 @@
   .calnav{display:flex;gap:4px;align-items:center}
   .calnav button{padding:4px 10px;font-size:12px}
   .calnav button:disabled{opacity:.4}
+  .favbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .favbar button{padding:5px 12px;font-size:12px}
+  .favbar .note{flex:1;min-width:220px;line-height:1.5}
+  .favbar .ask{display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;color:var(--text);
+    border-top:1px solid var(--border);margin-top:2px;padding-top:10px}
+  .favbar .ask.err{color:var(--warn)}
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
   .day{background:var(--panel);border:1px solid var(--border);border-radius:10px;
     padding:8px;box-shadow:var(--shadow);min-width:0}
@@ -315,6 +321,16 @@
     </div>
   </div>
 
+  <div class="panel" id="favBar" hidden>
+    <div class="favbar">
+      <button id="favExport" data-i18n="fav.export">ファイルに書き出す</button>
+      <button id="favImport" data-i18n="fav.import">ファイルから読み込む</button>
+      <input type="file" id="favFile" accept="application/json,.json" hidden>
+      <span class="note" data-i18n="fav.note">お気に入りはこの端末のブラウザにのみ保存されています。書き出したファイルが端末の外へ送られることはありません。</span>
+      <div class="ask" id="favAsk" hidden></div>
+    </div>
+  </div>
+
   <div class="panel" id="summary" hidden>
     <h2 id="sumTitle">まとめ</h2>
     <div class="stats" id="stats"></div>
@@ -423,6 +439,23 @@ var I18N = {
     "cal.season": "他シーズンの作品を除く", "cal.noshort": "短編・特番・OVAを除く", "cal.fav": "お気に入りのみ",
     loading: "読み込み中…", empty: "該当する作品がありません。",
     favEmpty: "お気に入りはまだありません。カードの★で追加できます。",
+    "fav.export": "ファイルに書き出す", "fav.import": "ファイルから読み込む",
+    "fav.note": "お気に入りはこの端末のブラウザにのみ保存されています。書き出したファイルが端末の外へ送られることはありません。",
+    favNone: "書き出せるお気に入りがありません。",
+    favSaved: "{n}件を書き出しました。",
+    favRead: "{n}件を読み取りました。どう反映しますか。",
+    favSkipped: "（形式が合わない{n}件は除きました）",
+    favReplace: "置き換える", favMerge: "追加する", favCancel: "やめる",
+    favReplaced: "お気に入りを{n}件に置き換えました。",
+    favMerged: "{n}件を追加しました（すでにあった{d}件はそのままです）。",
+    favMergedNone: "追加できるものはありませんでした（{d}件はすでにお気に入りです）。",
+    favErrJson: "JSONとして読み取れませんでした。ファイルが壊れていないか確認してください。",
+    favErrShape: "Courdeckが書き出したお気に入りファイルではないようです。",
+    favErrVersion: "対応していない形式です（version {s}）。新しいCourdeckで書き出したファイルかもしれません。",
+    favErrEmpty: "使えるお気に入りが1件も入っていませんでした。",
+    favErrBig: "ファイルが大きすぎます（上限{s}MB）。",
+    favErrRead: "ファイルを読み込めませんでした。",
+    favErrSave: "保存できませんでした。ブラウザの保存容量が足りない可能性があります。元のお気に入りはそのままです。",
     allLoaded: "すべて読み込みました", more: "さらに読み込む", retry: "再試行",
     calLoading: "放送予定を取得中…", noAir: "放送なし", calLoadingSuffix: "（読み込み中…）",
     offline: "オフラインになりました。表示中のデータは最後に取得した内容です。",
@@ -475,6 +508,23 @@ var I18N = {
     "cal.fav": "Favorites only",
     loading: "Loading…", empty: "No titles match these filters.",
     favEmpty: "No favorites yet. Use the ★ on any card to add one.",
+    "fav.export": "Export to a file", "fav.import": "Import from a file",
+    "fav.note": "Favorites live only in this browser, on this device. Exporting writes a file locally and sends nothing anywhere.",
+    favNone: "There are no favorites to export.",
+    favSaved: "Exported {n} favorites.",
+    favRead: "Read {n} favorites. How should they be applied?",
+    favSkipped: " ({n} entries were skipped because they did not match the format.)",
+    favReplace: "Replace", favMerge: "Add to existing", favCancel: "Cancel",
+    favReplaced: "Replaced your favorites with {n} entries.",
+    favMerged: "Added {n} favorites ({d} were already there and were left alone).",
+    favMergedNone: "Nothing to add — all {d} entries are already favorites.",
+    favErrJson: "This file could not be read as JSON. Check that it is not damaged.",
+    favErrShape: "This does not look like a favorites file exported by Courdeck.",
+    favErrVersion: "Unsupported format (version {s}). It may come from a newer build of Courdeck.",
+    favErrEmpty: "The file contained no usable favorites.",
+    favErrBig: "The file is too large (limit {s} MB).",
+    favErrRead: "The file could not be read.",
+    favErrSave: "Could not save. Your browser may be out of storage. Your existing favorites are unchanged.",
     allLoaded: "That's everything", more: "Load more", retry: "Retry",
     calLoading: "Loading the schedule…", noAir: "Nothing airing", calLoadingSuffix: " (loading…)",
     offline: "You are offline. Showing the last data that was fetched.",
@@ -542,6 +592,7 @@ function applyLang(){
     t("btn.filters") + (el("filters").classList.contains("collapsed") ? " ▾" : " ▴");
   fillGenreSelect();
   el("sumTitle").textContent = scopeLabel() + t("sum.suffix");
+  favMsg("");                    /* 組み立て済みの文言が残らないよう、切り替え時に消す */
 }
 
 /* 表示名は言語に応じて切り替える（英語側は AniList の原語表記をそのまま使う） */
@@ -646,7 +697,8 @@ var state = {
 var favs = load(FAV_KEY, {});
 
 function load(k, def){ try { return JSON.parse(localStorage.getItem(k)) || def; } catch(e){ return def; } }
-function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+/* 保存できたかを返す。容量不足で書けなかった場合に呼び出し側が気づけるようにする */
+function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 
 function cacheRaw(key){ return load(CACHE_KEY, {})[key] || null; }
 function cacheGet(key){
@@ -807,9 +859,11 @@ function setView(v){
   el("tabFav").classList.toggle("on", v === "fav");
   el("searchPanel").hidden = v === "cal";
   el("calBar").hidden = v !== "cal";
+  el("favBar").hidden = v !== "fav";
   el("cal").hidden = v !== "cal";
   el("grid").hidden = v === "cal";
   msg("");
+  favMsg("");                    /* タブを移ったら書き出し／読み込みの結果表示は消す */
   if (v === "cal"){
     el("summary").hidden = true;
     el("more").innerHTML = "";
@@ -1391,6 +1445,168 @@ function renderFavCount(){
   el("favCount").textContent = n ? "(" + n + ")" : "";
 }
 
+/* ── お気に入りの書き出し / 読み込み ───────────────────────────
+   FileReader とローカルへのダウンロードだけで完結させる。外部への送信は一切しない。
+   読み込んだファイルは AniList から来たデータと同じく信用しない。既知の項目だけを
+   型を見ながら移し替え、URL は http(s) に限る。未知の項目は捨てる。 */
+var FAV_FORMAT = 1;                       /* 形式のバージョン。互換性が切れたら上げる */
+var FAV_MAX_MB = 5;
+var FAV_MAX_ITEMS = 5000;
+
+function favStr(v, max){ return typeof v === "string" ? v.slice(0, max || 200) : ""; }
+function favNum(v){ return typeof v === "number" && isFinite(v) ? v : null; }
+function favUrl(v){ var s = favStr(v, 500); return /^https?:\/\//i.test(s) ? s : ""; }
+function favYmd(v){
+  return v && typeof v === "object"
+    ? {year: favNum(v.year), month: favNum(v.month), day: favNum(v.day)} : null;
+}
+
+/* アプリが描画に使う項目だけを取り出した作品データを作る。
+   id が無いもの、タイトルが1つも無いものは中身が無いので捨てる */
+function favClean(raw){
+  if (!raw || typeof raw !== "object") return null;
+  var id = favNum(raw.id);
+  if (!id || id <= 0) return null;
+  var ti = raw.title && typeof raw.title === "object" ? raw.title : {};
+  if (!favStr(ti.romaji) && !favStr(ti.english) && !favStr(ti.native)) return null;
+  var ci = raw.coverImage && typeof raw.coverImage === "object" ? raw.coverImage : {};
+  var color = favStr(ci.color, 10);
+  var nodes = raw.studios && raw.studios.nodes;
+  var next = raw.nextAiringEpisode && typeof raw.nextAiringEpisode === "object" ? raw.nextAiringEpisode : null;
+  var tr = raw.trailer && typeof raw.trailer === "object" ? raw.trailer : null;
+  return {
+    id: id,
+    title: {romaji: favStr(ti.romaji), english: favStr(ti.english), native: favStr(ti.native)},
+    description: favStr(raw.description, 4000),
+    format: favStr(raw.format, 40), status: favStr(raw.status, 40), source: favStr(raw.source, 40),
+    episodes: favNum(raw.episodes), duration: favNum(raw.duration),
+    season: favStr(raw.season, 20), seasonYear: favNum(raw.seasonYear),
+    averageScore: favNum(raw.averageScore), popularity: favNum(raw.popularity),
+    favourites: favNum(raw.favourites),
+    genres: Array.isArray(raw.genres)
+      ? raw.genres.slice(0, 20).map(function(g){ return favStr(g, 40); }).filter(Boolean) : [],
+    coverImage: {
+      large: favUrl(ci.large), medium: favUrl(ci.medium),
+      color: /^#[0-9a-f]{3,8}$/i.test(color) ? color : null
+    },
+    bannerImage: favUrl(raw.bannerImage),
+    startDate: favYmd(raw.startDate), endDate: favYmd(raw.endDate),
+    studios: {nodes: Array.isArray(nodes)
+      ? nodes.slice(0, 5).map(function(s){ return {name: favStr(s && s.name, 80)}; })
+             .filter(function(s){ return s.name; }) : []},
+    nextAiringEpisode: next ? {episode: favNum(next.episode), airingAt: favNum(next.airingAt)} : null,
+    trailer: tr ? {id: favStr(tr.id, 60), site: favStr(tr.site, 20)} : null,
+    externalLinks: Array.isArray(raw.externalLinks)
+      ? raw.externalLinks.slice(0, 12)
+          .map(function(l){ return {site: favStr(l && l.site, 60), url: favUrl(l && l.url)}; })
+          .filter(function(l){ return l.site && l.url; }) : [],
+    siteUrl: favUrl(raw.siteUrl)
+  };
+}
+
+function favMsg(text, isErr){
+  var box = el("favAsk");
+  box.className = "ask" + (isErr ? " err" : "");
+  box.innerHTML = text ? "<span>" + esc(text) + "</span>" : "";
+  box.hidden = !text;
+}
+
+function favFileName(){
+  var d = new Date();
+  var p = function(n){ return ("0" + n).slice(-2); };
+  return "courdeck-favorites-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + ".json";
+}
+
+function exportFavs(){
+  var list = Object.keys(favs).map(function(k){ return favClean(favs[k]); }).filter(Boolean);
+  if (!list.length){ favMsg(t("favNone"), true); return; }
+  var body = JSON.stringify({
+    app: "courdeck", version: FAV_FORMAT,
+    exportedAt: new Date().toISOString(), count: list.length, favorites: list
+  }, null, 2);
+  var url = URL.createObjectURL(new Blob([body], {type: "application/json"}));
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = favFileName();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 0);
+  favMsg(t("favSaved", {n: list.length}));
+}
+
+/* 中身を確かめるだけで、お気に入りには触れない。壊れたファイルで既存データを失わないため */
+function parseFavFile(text){
+  var data;
+  try { data = JSON.parse(text); } catch(e){ return {err: t("favErrJson")}; }
+  if (!data || typeof data !== "object" || !Array.isArray(data.favorites)) return {err: t("favErrShape")};
+  if (data.version !== FAV_FORMAT) return {err: t("favErrVersion", {s: String(data.version)})};
+  var items = [], skipped = 0;
+  for (var i = 0; i < data.favorites.length; i++){
+    if (items.length >= FAV_MAX_ITEMS) { skipped += data.favorites.length - i; break; }
+    var m = favClean(data.favorites[i]);
+    if (m) items.push(m); else skipped++;
+  }
+  if (!items.length) return {err: t("favErrEmpty")};
+  return {items: items, skipped: skipped};
+}
+
+function applyFavs(items, mode){
+  var backup = favs;
+  var next = {}, added = 0, dup = 0;
+  if (mode !== "replace"){
+    Object.keys(favs).forEach(function(k){ next[k] = favs[k]; });
+  }
+  items.forEach(function(m){
+    if (next[m.id]) dup++;
+    else { next[m.id] = m; added++; }
+  });
+  favs = next;
+  if (!save(FAV_KEY, favs)){
+    favs = backup;                        /* 書けなかったら元に戻す */
+    save(FAV_KEY, favs);
+    favMsg(t("favErrSave"), true);
+    return;
+  }
+  renderFavCount();
+  renderGrid();
+  if (cal.rows.length) renderCalendar();
+  favMsg(mode === "replace" ? t("favReplaced", {n: added})
+       : added ? t("favMerged", {n: added, d: dup})
+       : t("favMergedNone", {d: dup}));
+}
+
+function askFavApply(res){
+  var box = el("favAsk");
+  box.className = "ask";
+  box.innerHTML = "<span>" +
+    esc(t("favRead", {n: res.items.length}) + (res.skipped ? t("favSkipped", {n: res.skipped}) : "")) +
+    "</span>" +
+    '<button id="favDoReplace">' + esc(t("favReplace")) + "</button>" +
+    '<button id="favDoMerge">' + esc(t("favMerge")) + "</button>" +
+    '<button id="favDoCancel">' + esc(t("favCancel")) + "</button>";
+  box.hidden = false;
+  el("favDoReplace").onclick = function(){ applyFavs(res.items, "replace"); };
+  el("favDoMerge").onclick = function(){ applyFavs(res.items, "merge"); };
+  el("favDoCancel").onclick = function(){ favMsg(""); };
+  el("favDoReplace").focus();
+}
+
+function readFavFile(file){
+  if (!file) return;
+  if (file.size > FAV_MAX_MB * 1024 * 1024){
+    favMsg(t("favErrBig", {s: String(FAV_MAX_MB)}), true);
+    return;
+  }
+  var r = new FileReader();
+  r.onerror = function(){ favMsg(t("favErrRead"), true); };
+  r.onload = function(){
+    var res = parseFavFile(String(r.result));
+    if (res.err) favMsg(res.err, true); else askFavApply(res);
+  };
+  r.readAsText(file);
+}
+
 function fillYearSelect(){
   var y = el("year"), cur = y.value;
   var html = '<option value="">' + t("none") + "</option>";
@@ -1558,6 +1774,9 @@ el("calPrev").onclick = function(){ goWeek(cal.offset - 1); };
 el("calNext").onclick = function(){ goWeek(cal.offset + 1); };
 el("calThis").onclick = function(){ goWeek(0); };
 el("calThis").disabled = true;
+el("favExport").onclick = exportFavs;
+el("favImport").onclick = function(){ el("favFile").value = ""; el("favFile").click(); };
+el("favFile").onchange = function(){ readFavFile(this.files && this.files[0]); };
 el("calSeason").onchange = onCalPrefChange;
 el("calNoShort").onchange = onCalPrefChange;
 el("calFav").onchange = onCalPrefChange;

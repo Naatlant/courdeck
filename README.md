@@ -28,7 +28,7 @@ file you can open in a browser.
 | **Japanese synopses** | The upstream synopsis is English only, so the app pulls the lead section of the Japanese Wikipedia article and falls back to English when no article matches |
 | **Hover preview** | Hovering a card opens an enlarged panel with the banner art, score, streaming services and next episode |
 | Details | Air period, next episode, studio, source material, trailer, official and streaming links |
-| Favorites | Stored in localStorage. The weekly schedule can be filtered down to favorites only |
+| Favorites | Stored in localStorage, with **export and import as a JSON file** so a cleared browser does not lose them and a phone and a desktop can share the same list. The weekly schedule can be filtered down to favorites only |
 | **Shareable URLs** | Filters and the active tab live in the query string, so any view can be bookmarked, shared, and navigated with the browser's back button |
 | Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
 | Keyboard support | Tab through cards and open them with Enter / Space, `/` focuses the search box, and focus stays inside the dialog |
@@ -217,7 +217,8 @@ revenue and traffic generation as commercial.
 
 Nothing is collected. There is no analytics, no advertising, and no backend of our own.
 Favorites and preferences are stored in your browser's localStorage and never leave your
-device.
+device. Exporting favorites writes a file onto your own machine and importing reads one back
+with `FileReader`; neither step contacts a server.
 
 ## Notes on upstream terms
 
