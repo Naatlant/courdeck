@@ -24,17 +24,23 @@ SOFTWARE.
 
 SCOPE / 適用範囲
 
-The MIT License above applies ONLY to the source code authored in this
-repository:
+The MIT License above applies ONLY to the source code and artwork authored in
+this repository:
 
-    anime.html
     index.html
+    anime.html
+    sw.js
+    manifest.webmanifest
     scripts/**
+    test/**
     .github/**
+    data/synopses-overrides.json
+    assets/icon-*.png, assets/apple-touch-icon.png, assets/og.png
+        (drawn in this repository from the project's own logo and type)
 
 It does NOT apply to the following, which remain subject to the terms of their
-respective providers. They are included here solely so that this application can
-display them, and are NOT sublicensed to you.
+respective providers or to a different licence. They are included here solely so
+that this application can display them, and are NOT sublicensed to you.
 
   data/streaming.json
       Derived from TMDB (https://www.themoviedb.org/) and JustWatch.
@@ -43,14 +49,26 @@ display them, and are NOT sublicensed to you.
       Non-commercial use only. If you reuse this data, you must obtain your own
       TMDB API key and comply with those terms yourself.
 
-  Note: the AniList-to-TMDB mapping used at build time comes from
-  Fribb/anime-lists, derived from manami-project/anime-offline-database
-  (ODbL 1.0 / DbCL 1.0). It is used for lookup only; no identifiers from it are
-  written into data/streaming.json.
+  data/synopses.json
+      Lead-section excerpts from the Japanese Wikipedia
+      (https://ja.wikipedia.org/), licensed CC BY-SA 4.0
+      (https://creativecommons.org/licenses/by-sa/4.0/).
+      Each entry carries the article name and its URL so that the attribution
+      travels with the text. If you reuse this file, you must keep that
+      attribution and licence it under the same terms.
 
   assets/tmdb.svg
       Trademark of TMDB, included for the attribution required by their terms.
       Not licensed for any other use.
+
+  assets/demo.gif, assets/screenshot-*.jpg
+      Screenshots of the running application. The cover and banner art visible
+      in them belongs to the respective rights holders.
+
+  Note: the AniList-to-TMDB mapping used at build time comes from
+  Fribb/anime-lists, derived from manami-project/anime-offline-database
+  (ODbL 1.0 / DbCL 1.0). It is used for lookup only; no identifiers from it are
+  written into data/streaming.json.
 
 Content fetched at runtime is likewise owned by its providers:
 
@@ -58,10 +76,12 @@ Content fetched at runtime is likewise owned by its providers:
   Synopses                        Japanese Wikipedia, CC BY-SA
                                   (https://ja.wikipedia.org/)
 
-上記MITライセンスは、このリポジトリで書かれたソースコードにのみ適用されます。
-`data/streaming.json` と `assets/tmdb.svg` は各提供元の規約に従うものであり、
-MITライセンスの対象外です。データを再利用する場合は、ご自身でTMDBのAPIキーを取得し、
-TMDBの規約を遵守してください。商用利用はできません。
+上記MITライセンスは、このリポジトリで書かれたソースコードと図版にのみ適用されます。
+`data/streaming.json` と `assets/tmdb.svg` は各提供元の規約に従い、MITライセンスの
+対象外です。データを再利用する場合は、ご自身でTMDBのAPIキーを取得し、TMDBの規約を
+遵守してください。商用利用はできません。
+`data/synopses.json` は日本語版Wikipediaからの抜粋で **CC BY-SA 4.0** です。再利用する
+場合は、記事名と記事URLによる帰属表示を保ち、同じライセンスで配布してください。
 
 This product uses TMDB and the TMDB APIs but is not endorsed, certified, or
 otherwise approved by TMDB.
