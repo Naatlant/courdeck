@@ -38,6 +38,14 @@
     font-size:14px;line-height:1.6;}
   .wrap{max-width:1180px;margin:0 auto}
   h1{font-size:20px;margin:0;font-weight:600;letter-spacing:.02em}
+  .brand{display:flex;align-items:center;gap:9px;font-size:24px;letter-spacing:-.015em;
+    line-height:1}
+  .brand .mark{width:25px;height:25px;flex:none}
+  /* 4つの区画＝1年の4クール。右下が現在のクール */
+  .brand .mark rect{fill:currentColor;opacity:.2}
+  .brand .mark rect.lit{fill:var(--accent);opacity:1}
+  .brand .wm{font-weight:700}
+  .brand .wm span{color:var(--accent);font-weight:600}
   .head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
   .langsw{margin-left:auto;display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
   .langsw button{border:none;border-radius:0;padding:7px 16px;font-size:12.5px;font-weight:600;
@@ -193,7 +201,14 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <h1 data-i18n="app.title">Courdeck</h1>
+    <h1 class="brand">
+      <svg class="mark" viewBox="0 0 28 28" aria-hidden="true">
+        <rect x="1" y="1" width="12" height="12" rx="3.5"/>
+        <rect x="15" y="1" width="12" height="12" rx="3.5"/>
+        <rect x="1" y="15" width="12" height="12" rx="3.5"/>
+        <rect x="15" y="15" width="12" height="12" rx="3.5" class="lit"/>
+      </svg><span class="wm">Cour<span>deck</span></span>
+    </h1>
     <div class="langsw" id="langsw">
       <button data-lang="ja">日本語</button>
       <button data-lang="en">English</button>
