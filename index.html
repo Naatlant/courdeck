@@ -37,7 +37,18 @@
     font-family:"Segoe UI","Yu Gothic UI","Hiragino Kaku Gothic ProN",Meiryo,system-ui,sans-serif;
     font-size:14px;line-height:1.6;}
   .wrap{max-width:1180px;margin:0 auto}
-  h1{font-size:20px;margin:0 0 4px;font-weight:600;letter-spacing:.02em}
+  h1{font-size:20px;margin:0;font-weight:600;letter-spacing:.02em}
+  .head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .langsw{margin-left:auto;display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .langsw button{border:none;border-radius:0;padding:7px 16px;font-size:12.5px;font-weight:600;
+    background:var(--panel);color:var(--muted)}
+  .langsw button+button{border-left:1px solid var(--border)}
+  .langsw button.on{background:var(--accent);color:#fff}
+  .langsw button:hover:not(.on){color:var(--accent)}
+  .credits{margin-top:44px;padding-top:16px;border-top:1px solid var(--border);
+    font-size:11px;color:var(--muted);line-height:1.9}
+  .credits a{color:var(--muted)}
+  .credits .tmdb{height:11px;vertical-align:-1px}
   .lead{font-size:12px;color:var(--muted);margin:0 0 16px;line-height:1.9}
   .lead a{color:var(--muted)}
   .lead .tmdb{height:11px;vertical-align:-1px}
@@ -181,7 +192,13 @@
 </head>
 <body>
 <div class="wrap">
-  <h1 data-i18n="app.title">Courdeck</h1>
+  <div class="head">
+    <h1 data-i18n="app.title">Courdeck</h1>
+    <div class="langsw" id="langsw">
+      <button data-lang="ja">日本語</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
   <p class="lead" id="lead"></p>
 
   <div class="panel" id="searchPanel">
@@ -241,7 +258,6 @@
     <button id="tabCal" data-i18n="tab.cal">曜日表</button>
     <button id="tabFav"><span data-i18n="tab.fav">お気に入り</span> <span id="favCount"></span></button>
     <span style="flex:1"></span>
-    <button id="langBtn" title="Switch language">English</button>
     <button id="reload" data-i18n="btn.reload" data-i18n-title="btn.reloadTip" title="キャッシュを使わず最新を取り直す">再取得</button>
   </div>
 
@@ -262,6 +278,8 @@
   <div class="grid" id="grid"></div>
   <div class="cal" id="cal" hidden></div>
   <div id="more"></div>
+
+  <footer class="credits" id="credits"></footer>
 </div>
 
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
@@ -314,8 +332,8 @@ MEDIA_FIELDS,
 
 /* ---------- 言語（日本語 / English） ---------- */
 var LANG_KEY = "animeLang_v1";
-var LEAD_JA =
-  'AniList の公開APIから今季・過去シーズンの作品を自動取得します。<br>' +
+var CREDITS_JA =
+  '' +
   '作品情報: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> ／ ' +
   'あらすじ: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">ウィキペディア日本語版</a>' +
   '（<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ja" target="_blank" rel="noopener">CC BY-SA 4.0</a>） ／ ' +
@@ -325,8 +343,8 @@ var LEAD_JA =
   '（<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a>）<br>' +
   '<span class="notice-en">This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span><br>' +
   '本アプリは AniList・TMDB とは無関係の非公式・非営利プロジェクトです。利用者の情報は収集せず、お気に入りや設定はお使いの端末内にのみ保存されます。';
-var LEAD_EN =
-  'Seasonal and past anime, pulled automatically from public APIs. Streaming availability is for Japan.<br>' +
+var CREDITS_EN =
+  '' +
   'Titles: <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> / ' +
   'Synopses: <a href="https://ja.wikipedia.org/" target="_blank" rel="noopener">Japanese Wikipedia</a>' +
   ' (<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>) / ' +
@@ -339,7 +357,7 @@ var LEAD_EN =
 
 var I18N = {
   ja: {
-    "app.title": "Courdeck", lead: LEAD_JA, langBtn: "English",
+    "app.title": "Courdeck", lead: "AniList の公開APIから今季・過去シーズンの作品を自動取得し、国内の配信状況とあわせて表示します。", credits: CREDITS_JA, langBtn: "English",
     docTitle: "Courdeck｜今季アニメ・週間放送表・国内の配信状況",
     "p.current": "今季", "p.prev": "前季", "p.next": "来季",
     "p.airing": "放送中の話題作", "p.alltime": "歴代トップ", "p.year": "今年のベスト",
@@ -388,7 +406,7 @@ var I18N = {
     dash: "—"
   },
   en: {
-    "app.title": "Courdeck", lead: LEAD_EN, langBtn: "日本語",
+    "app.title": "Courdeck", lead: "Seasonal and past anime pulled from public APIs, with streaming availability for Japan.", credits: CREDITS_EN, langBtn: "日本語",
     docTitle: "Courdeck | Seasonal anime, weekly schedule, streaming in Japan",
     "p.current": "This season", "p.prev": "Previous", "p.next": "Next",
     "p.airing": "Trending now", "p.alltime": "All-time best", "p.year": "Best of the year",
@@ -456,8 +474,11 @@ function detectLang(){
 function applyLang(){
   document.documentElement.lang = lang;
   document.title = t("docTitle");
-  el("lead").innerHTML = t("lead");
-  el("langBtn").textContent = t("langBtn");
+  el("lead").textContent = t("lead");
+  el("credits").innerHTML = t("credits");
+  Array.prototype.forEach.call(el("langsw").children, function(b){
+    b.classList.toggle("on", b.dataset.lang === lang);
+  });
   Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function(n){
     n.textContent = t(n.dataset.i18n);
   });
@@ -1432,7 +1453,9 @@ function setLang(next){
   if (cal.rows.length) renderCalendar();
   if (el("modal").classList.contains("open") && curDesc.id) openDetail(curDesc.id);
 }
-el("langBtn").onclick = function(){ setLang(lang === "ja" ? "en" : "ja"); };
+Array.prototype.forEach.call(el("langsw").children, function(b){
+  b.onclick = function(){ if (b.dataset.lang !== lang) setLang(b.dataset.lang); };
+});
 
 loadStreaming();
 bindPreview("grid", ".card");
