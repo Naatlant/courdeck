@@ -771,7 +771,7 @@ var state = {
   year: CUR.year, season: CUR.season, sort: "POPULARITY_DESC",
   format: "", genre: "", minScore: "", q: "", status: "",
   page: 1, hasNext: true, total: 0, items: [], loading: false, view: "list", fresh: false,
-  autoPages: 0
+  autoPages: 0, autoStop: false
 };
 var favs = load(FAV_KEY, {});
 /* 一度読み終えた表紙のURL。作り直しでちらつかせないための記録 */
@@ -896,6 +896,9 @@ function loadMore(auto){
     renderSummary();
   }).catch(function(err){
     msg(err.message, true, true);
+    /* 失敗した直後に自動で続きを読むと、相手が「待て」と言っている最中に
+       上限まで叩き返すことになる。利用者が再試行を押すまで自動読み込みは止める */
+    state.autoStop = true;
   }).then(function(){
     state.loading = false;
     state.fresh = false;
@@ -909,7 +912,7 @@ var AUTO_PAGE_LIMIT = 10;                              /* 連続で自動読み�
 var autoLoadOn = ("IntersectionObserver" in window);   /* 非対応環境はボタン表示にする */
 
 function canAutoLoad(){
-  return autoLoadOn && state.view === "list" && state.hasNext &&
+  return autoLoadOn && state.view === "list" && state.hasNext && !state.autoStop &&
          !state.loading && state.autoPages < AUTO_PAGE_LIMIT;
 }
 function checkAutoLoad(){
@@ -926,7 +929,8 @@ function refresh(){
 
 function reset(){
   hideNotice();
-  state.page = 1; state.hasNext = true; state.items = []; state.total = 0; state.autoPages = 0;
+  state.page = 1; state.hasNext = true; state.items = []; state.total = 0;
+  state.autoPages = 0; state.autoStop = false;
   setView("list");
   el("grid").innerHTML = ""; el("summary").hidden = true;
   msg(t("loading"));
@@ -1040,7 +1044,7 @@ function renderMore(){
   /* 自動読み込みが続く間はボタンを出さない（上限到達・未対応環境のみ手動） */
   box.innerHTML = canAutoLoad() ? "" : '<button id="btnMore">' + t("more") + "</button>";
   var b = el("btnMore");
-  if (b) b.onclick = function(){ state.autoPages = 0; loadMore(true); };
+  if (b) b.onclick = function(){ state.autoPages = 0; state.autoStop = false; loadMore(true); };
 }
 
 function topCount(list, pick){
