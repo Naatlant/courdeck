@@ -40,6 +40,11 @@ scripts/serve.mjs            手元で確認するための静的サーバー
 ODbLは派生データベースの同一ライセンス公開を求めるが、TMDBは再許諾を禁じており、
 両方を同じファイルに載せると矛盾する。IDを持ち出さないことで衝突を回避している。
 
+自前照合のキャッシュ（既定 `.cache/tmdb-ids.json`）も **TMDBのIDを持つのでリポジトリに入れない**。
+gitignore 済みで、GitHub Actions では `actions/cache` に載せている。`data/` へ移したり公開物に
+混ぜたりしないこと。失われても1回150件の上限つきで引き直されるだけなので、
+「消えると困るからリポジトリに置く」という判断はしない。
+
 TMDBのAPIキーは GitHub Secrets（`TMDB_API_KEY`）に置く。公開物には絶対に含めない。
 ローカル実行時は `.tmdb_key`（gitignore済み）から読む。
 

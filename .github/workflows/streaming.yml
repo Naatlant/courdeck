@@ -29,6 +29,17 @@ jobs:
         with:
           node-version: "22"
 
+      # 自前照合で判明した AniList ID → TMDB ID の対応表。
+      # TMDB IDを含むためリポジトリには置かず、Actions のキャッシュに載せる。
+      # 日次で実行されるので7日無アクセスによる破棄には当たらない。
+      # 失われた場合も上限つきで順次引き直されるだけで、壊れはしない。
+      - name: 自前照合のキャッシュを復元
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: tmdb-ids-${{ github.run_id }}
+          restore-keys: tmdb-ids-
+
       - name: 配信情報を取得
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
