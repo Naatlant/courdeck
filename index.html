@@ -420,7 +420,7 @@ var I18N = {
     "btn.filters": "詳細な絞り込み", "btn.reload": "再取得",
     "btn.reloadTip": "キャッシュを使わず最新を取り直す",
     "tab.list": "一覧", "tab.cal": "曜日表", "tab.fav": "お気に入り",
-    "cal.season": "今季の作品のみ", "cal.noshort": "短編・特番・OVAを除く", "cal.fav": "お気に入りのみ",
+    "cal.season": "他シーズンの作品を除く", "cal.noshort": "短編・特番・OVAを除く", "cal.fav": "お気に入りのみ",
     loading: "読み込み中…", empty: "該当する作品がありません。",
     favEmpty: "お気に入りはまだありません。カードの★で追加できます。",
     allLoaded: "すべて読み込みました", more: "さらに読み込む", retry: "再試行",
@@ -471,7 +471,7 @@ var I18N = {
     "btn.filters": "More filters", "btn.reload": "Refresh",
     "btn.reloadTip": "Re-fetch, bypassing the cache",
     "tab.list": "List", "tab.cal": "Weekly", "tab.fav": "Favorites",
-    "cal.season": "This season only", "cal.noshort": "Hide shorts, specials and OVAs",
+    "cal.season": "Hide titles from other seasons", "cal.noshort": "Hide shorts, specials and OVAs",
     "cal.fav": "Favorites only",
     loading: "Loading…", empty: "No titles match these filters.",
     favEmpty: "No favorites yet. Use the ★ on any card to add one.",
@@ -1022,10 +1022,21 @@ function loadCalendar(force){
   });
 }
 
+/* 深夜分は前日扱い。放送日そのものを返す */
+function broadcastDate(at){
+  var d = new Date(at * 1000);
+  if (d.getHours() < 5) d.setDate(d.getDate() - 1);
+  return d;
+}
 function calFilter(r){
   var m = r.m;
   if (el("calFav").checked && !favs[m.id]) return false;
-  if (el("calSeason").checked && !(m.seasonYear === CUR.year && m.season === CUR.season)) return false;
+  if (el("calSeason").checked){
+    /* 読み込み時の季節ではなく、その放送日が属する季節で判定する。
+       週を送った先や、季節をまたぐ週でも正しく絞り込むため */
+    var d = broadcastDate(r.at);
+    if (!(m.seasonYear === d.getFullYear() && m.season === seasonOf(d))) return false;
+  }
   if (el("calNoShort").checked && SHORT_FORMATS.indexOf(m.format) >= 0) return false;
   return true;
 }
@@ -1061,9 +1072,7 @@ function renderCalendar(){
   var shown = 0;
   cal.rows.forEach(function(r){
     if (!calFilter(r)) return;
-    var d = new Date(r.at * 1000);
-    if (d.getHours() < 5) d.setDate(d.getDate() - 1);   /* 深夜分は前日の枠へ */
-    var i = index[dayKey(d)];
+    var i = index[dayKey(broadcastDate(r.at))];
     if (i == null) return;
     days[i].rows.push(r);
     shown++;
@@ -1145,16 +1154,16 @@ function pickPage(json, want){
 }
 function loadWiki(m){
   if (wikiCache[m.id] !== undefined) return Promise.resolve(wikiCache[m.id]);
-  var t = m.title.native;
-  if (!t) return Promise.resolve(false);
-  var base = baseTitle(t);
+  var nat = m.title.native;
+  if (!nat) return Promise.resolve(false);
+  var base = baseTitle(nat);
   function byTitle(name){
     return fetch(wikiUrl("titles=" + encodeURIComponent(name)))
       .then(function(r){ return r.json(); })
-      .then(function(j){ return pickPage(j, t); });
+      .then(function(j){ return pickPage(j, nat); });
   }
-  return byTitle(t)
-    .then(function(hit){ return hit || (base !== t ? byTitle(base) : null); })
+  return byTitle(nat)
+    .then(function(hit){ return hit || (base !== nat ? byTitle(base) : null); })
     .then(function(hit){
       if (hit) return hit;
       /* 見つからなければ検索で最有力の3件から照合する */
@@ -1252,20 +1261,20 @@ function bindPreview(rootId, selector){
   var root = el(rootId);
   root.addEventListener("mouseover", function(e){
     if (!hoverOn) return;
-    var t = e.target.closest(selector);
-    if (!t || t === pvTarget) return;
-    pvTarget = t;
+    var node = e.target.closest(selector);
+    if (!node || node === pvTarget) return;
+    pvTarget = node;
     clearTimeout(pvTimer);
     pvTimer = setTimeout(function(){
-      if (pvTarget !== t || !document.body.contains(t)) return;
-      var m = findMedia(Number(t.dataset.id));
-      if (m) showPreview(t, m);
+      if (pvTarget !== node || !document.body.contains(node)) return;
+      var m = findMedia(Number(node.dataset.id));
+      if (m) showPreview(node, m);
     }, HOVER_DELAY);
   });
   root.addEventListener("mouseout", function(e){
-    var t = e.target.closest(selector);
-    if (!t) return;
-    if (e.relatedTarget && t.contains(e.relatedTarget)) return;   /* 同じ要素の中の移動は無視 */
+    var node = e.target.closest(selector);
+    if (!node) return;
+    if (e.relatedTarget && node.contains(e.relatedTarget)) return;   /* 同じ要素の中の移動は無視 */
     hidePreview();
   });
 }
@@ -1452,14 +1461,13 @@ function applyQuery(search){
   var l = u.get("lang");
   if (l === "ja" || l === "en") lang = l;
   state.q = u.get("q") || "";
-  state.year = u.has("year") ? (u.get("year") || "") : CUR.year;
+  state.year = u.has("year") ? validOpt("year", u.get("year")) : CUR.year;
   state.season = u.has("season") ? validOpt("season", u.get("season")) : CUR.season;
   state.sort = validOpt("sort", u.get("sort")) || "POPULARITY_DESC";
   state.format = validOpt("format", u.get("format"));
   state.genre = validOpt("genre", u.get("genre"));
   state.minScore = validOpt("minScore", u.get("score"));
   state.status = u.get("status") === "RELEASING" ? "RELEASING" : "";
-  if (state.year && !/^(19|20)[0-9]{2}$/.test(String(state.year))) state.year = CUR.year;
   var v = u.get("view");
   return (v === "cal" || v === "fav") ? v : "list";
 }
@@ -1501,7 +1509,7 @@ function goHome(){
 el("home").onclick = function(e){ e.preventDefault(); goHome(); };
 el("toggleFilters").onclick = function(){
   var open = !el("filters").classList.toggle("collapsed");
-  this.textContent = "詳細な絞り込み " + (open ? "▴" : "▾");
+  this.textContent = t("btn.filters") + (open ? " ▴" : " ▾");
 };
 el("apply").onclick = function(){
   readForm();
@@ -1521,6 +1529,7 @@ el("tabFav").onclick = function(){ setView("fav"); syncUrl(true); };
 el("tabCal").onclick = function(){ setView("cal"); syncUrl(true); };
 window.addEventListener("popstate", function(){
   var v = applyQuery(location.search);
+  applyLang();          /* URLで言語が戻ることがあるので文言も作り直す */
   syncForm();
   reset();
   if (v !== "list") setView(v);
@@ -1606,10 +1615,17 @@ function setLang(next){
   applyLang();
   syncUrl(false);
   /* 言語で表示名が変わるため、描画済みの内容を作り直す */
+  var trigId = (lastTrigger && lastTrigger.dataset) ? lastTrigger.dataset.id : null;
   renderGrid();
   renderMore();
   if (state.view === "list") renderSummary();
   if (cal.rows.length) renderCalendar();
+  /* 描き直しで起点の要素が入れ替わるため、同じIDの要素を捕まえ直す */
+  if (trigId){
+    var again = el("grid").querySelector('.card[data-id="' + trigId + '"]') ||
+                el("cal").querySelector('.slot[data-id="' + trigId + '"]');
+    if (again) lastTrigger = again;
+  }
   if (el("modal").classList.contains("open") && curDesc.id) openDetail(curDesc.id);
 }
 Array.prototype.forEach.call(el("langsw").children, function(b){
@@ -1622,6 +1638,7 @@ bindPreview("cal", ".slot");
 window.addEventListener("scroll", hidePreview, {passive: true});
 
 lang = detectLang();
+fillGenreSelect();   /* 選択肢を用意してから URL の値を照合する */
 var initView = applyQuery(location.search);
 applyLang();
 syncForm();
