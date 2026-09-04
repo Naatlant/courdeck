@@ -15,7 +15,7 @@
  */
 
 /* キャッシュしている中身を変えたら必ず上げること。古いキャッシュは activate で消す */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = "courdeck-shell-" + VERSION;
 const DATA = "courdeck-data-" + VERSION;
 
@@ -24,6 +24,7 @@ const SHELL_FILES = [
   "./index.html",
   "./manifest.webmanifest",
   "./assets/icon-192.png",
+  "./assets/apple-touch-icon.png",
   "./assets/icon-512.png",
   "./assets/icon-maskable-512.png",
 ];
