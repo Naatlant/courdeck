@@ -1253,8 +1253,35 @@ function pickPage(json, want){
   }
   return null;
 }
+/* ---------- 事前に解決したあらすじ ----------
+   GitHub Actions が data/synopses.json を作っている。照合の失敗が利用者ごとに毎回
+   起きるのを避け、表示のたびに Wikipedia へ出ていたリクエストも無くすため。
+   初期表示を遅くしたくないので、詳細を開くまで読み込まない。 */
+var synopses = null, synopsesReq = null;
+function loadSynopses(){
+  if (synopses) return Promise.resolve(synopses);
+  if (synopsesReq) return synopsesReq;
+  synopsesReq = fetch("data/synopses.json", {cache: "no-cache"})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ synopses = (j && j.items) || {}; return synopses; })
+    .catch(function(){ synopses = {}; return synopses; });   /* 読めなくても実行時取得で動く */
+  return synopsesReq;
+}
+
 function loadWiki(m){
   if (wikiCache[m.id] !== undefined) return Promise.resolve(wikiCache[m.id]);
+  return loadSynopses().then(function(map){
+    var e = map[m.id];
+    if (e && e.t){
+      wikiCache[m.id] = {text: e.t, title: e.w,
+        url: e.u || ("https://ja.wikipedia.org/wiki/" + encodeURIComponent(e.w || ""))};
+      return wikiCache[m.id];
+    }
+    return loadWikiLive(m);      /* 事前解決に無いものだけ、従来どおり実行時に取りに行く */
+  });
+}
+
+function loadWikiLive(m){
   var nat = m.title.native;
   if (!nat) return Promise.resolve(false);
   var base = baseTitle(nat);

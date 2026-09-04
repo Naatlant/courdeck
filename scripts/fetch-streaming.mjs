@@ -12,6 +12,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { seasonTargets, sleep } from "./season-targets.mjs";
 
 const ALL = process.argv.includes("--all");
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -27,7 +28,6 @@ function readLocalKey() {
   try { return fs.readFileSync(path.join(ROOT, ".tmdb_key"), "utf8"); } catch { return ""; }
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 console.log(`モード: ${ALL ? "全作品（全置換）" : "前季〜来季＋歴代トップ（マージ）"}\n`);
 
 /* ---------- 表示名の正規化 ---------- */
@@ -83,55 +83,6 @@ if (ALL) {
   ids = await seasonTargets();
 }
 console.log(`対象: ${ids.length}件`);
-
-async function seasonTargets() {
-  const AQ = `query($p:Int,$s:MediaSeason,$y:Int,$sort:[MediaSort],$score:Int){
-    Page(page:$p,perPage:50){ pageInfo{ hasNextPage }
-      media(type:ANIME,isAdult:false,season:$s,seasonYear:$y,sort:$sort,averageScore_greater:$score){ id } } }`;
-  const call = async (vars) => {
-    const r = await fetch("https://graphql.anilist.co", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: AQ, variables: vars }),
-    });
-    if (!r.ok) throw new Error("AniList HTTP " + r.status);
-    const j = await r.json();
-    if (j.errors) throw new Error(j.errors.map((e) => e.message).join(" / "));
-    return j.data.Page;
-  };
-  const collect = async (vars, maxPages) => {
-    const out = [];
-    for (let p = 1; p <= maxPages; p++) {
-      const page = await call({ ...vars, p });
-      page.media.forEach((m) => out.push(m.id));
-      if (!page.pageInfo.hasNextPage) break;
-      await sleep(700);                        /* AniList は 30 リクエスト/分 */
-    }
-    return out;
-  };
-  const seasonOf = (d) => ["WINTER","WINTER","WINTER","SPRING","SPRING","SPRING",
-                           "SUMMER","SUMMER","SUMMER","FALL","FALL","FALL"][d.getMonth()];
-  const shift = (year, season, dir) => {
-    const o = ["WINTER", "SPRING", "SUMMER", "FALL"];
-    let i = o.indexOf(season) + dir;
-    if (i < 0) { i = 3; year--; }
-    if (i > 3) { i = 0; year++; }
-    return { year, season: o[i] };
-  };
-  const now = new Date();
-  const cur = { year: now.getFullYear(), season: seasonOf(now) };
-  const set = new Set();
-  for (const t of [shift(cur.year, cur.season, -1), cur, shift(cur.year, cur.season, 1)]) {
-    const got = await collect({ s: t.season, y: t.year, sort: ["POPULARITY_DESC"] }, 4);
-    got.forEach((id) => set.add(id));
-    console.log(`${t.year} ${t.season}: ${got.length}件`);
-    await sleep(700);
-  }
-  const top = await collect({ sort: ["SCORE_DESC"], score: 74 }, 2);
-  top.forEach((id) => set.add(id));
-  console.log(`歴代トップ: ${top.length}件`);
-  return [...set];
-}
 
 /* ---------- TMDB ---------- */
 /* 分割クールは同じシリーズを指すため、TMDB ID 単位で重複排除してから叩く */

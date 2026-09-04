@@ -1,0 +1,49 @@
+name: あらすじの更新
+
+# 配信情報とは別のワークフローにしている。データ源も失敗の仕方も違うので、
+# 片方が落ちたときにもう片方を巻き込まないため。時間帯も重ならないようずらしてある。
+on:
+  schedule:
+    - cron: "0 19 * * 2"       # 毎週水曜 04:00 JST
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "true を指定すると既存の結果も引き直す"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: synopses
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # APIキーは要らない。Wikipedia の公開APIだけを使う
+      - name: あらすじを取得
+        run: >
+          node scripts/fetch-synopses.mjs
+          ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+
+      - name: 変更があればコミット
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/synopses.json
+          if git diff --staged --quiet; then
+            echo "変更なし"
+          else
+            git commit -m "あらすじを更新"
+            git push
+          fi

@@ -19,7 +19,7 @@
 | 自動集計 | 件数・平均スコア・放送中本数、ジャンル / 制作会社 / 原作媒体の分布 |
 | 週間放送スケジュール | 7日分を曜日別・時刻順に表示。**前後の週へ移動可能**。放送日は朝5時始まりで区切り、深夜帯は24時制表記（25:30 = 翌1:30） |
 | **国内の配信サービス** | dアニメ / Prime Video / U-NEXT / Netflix / Hulu など、日本で視聴できるサービスを表示（6,152作品） |
-| **日本語のあらすじ** | 日本語版Wikipediaの導入部を取得して表示。記事が無い作品はAniListの英語説明にフォールバック |
+| **日本語のあらすじ** | 日本語版Wikipediaの導入部を表示。記事の照合は **GitHub Actions が事前に済ませている**ので、詳細を開いてもWikipediaへのリクエストは出ない。事前解決に無い作品は従来どおり実行時に取得し、それも無ければAniListの英語説明にフォールバック |
 | **プレビューパネル** | バナー画像・スコア・配信サービス・次回放送を含む拡大パネル。マウスではホバー、キーボードでは Tab でフォーカスした時点、タッチ環境ではカード上のボタンから開く。`Esc` で閉じる |
 | 詳細表示 | 放送期間、次回放送日時、制作会社、原作媒体、PV、公式・配信リンク |
 | お気に入り | localStorage に保存し、**JSONファイルへの書き出しと読み込み**に対応。ブラウザのデータを消しても復元でき、PCとスマートフォンの間でも移せる。曜日表を「お気に入りのみ」に絞り込める。次回放送を **iCalendar（`.ics`）** として書き出し、手持ちのカレンダーアプリに取り込める |
@@ -52,7 +52,7 @@
 | --- | --- |
 | フロントエンド | 単一HTMLファイル（`index.html`、約1,450行）。HTML + CSS + JavaScript のみ、依存パッケージなし |
 | 作品情報 | AniList GraphQL API（`media` / `airingSchedules` の2クエリ、フィールド定義は共有） |
-| あらすじ | 日本語版Wikipedia API（完全一致 → 季数を除いた題名 → 検索の3段階で照合） |
+| あらすじ | 日本語版Wikipedia API（完全一致 → 季数を除いた題名 → 検索の3段階で照合）。GitHub Actions が事前に解決し JSON として配信 |
 | 配信情報 | TMDB API（データ提供元は JustWatch）。GitHub Actions で取得し JSON として配信 |
 | キャッシュ | localStorage に6時間保持（AniList のレート制限 30req/分 対策） |
 | 表示 | CSS Grid によるレスポンシブ、`prefers-color-scheme` によるダークモード |
@@ -97,21 +97,54 @@ flowchart LR
 | 2020年春 | 76% |
 | 1998年春 | 42% |
 
+## あらすじの仕組み
+
+AniList の説明文は英語だけなので、日本語版Wikipediaの導入部を代わりに表示しています。
+
+以前はこの照合を閲覧者のブラウザが詳細を開くたびに行っていました。その方式には2つの問題がありました。**照合の失敗が利用者ごとに毎回起きる**ことと、**表示のたびに外部へリクエストが出る**ことです。配信情報と同じく、GitHub Actions が事前に解決して `data/synopses.json` に書き出すようにしています。
+
+照合順序は従来の実行時実装と同じです（完全一致 → 季数表記を落とした題名 → 検索の上位3件）。別作品の記事を拾わないよう、記事名と作品名の包含関係も確認します。
+
+アプリ側はこの静的ファイルを見て、**該当が無い作品だけ従来どおり実行時に取得**します。ファイルは詳細を開くまで読み込まないので、初期表示の速さは変わりません。
+
+### 誤った記事に紐付いたとき
+
+`data/synopses-overrides.json` に作品IDと記事名を書けば、次の生成からそちらが優先されます。
+
+```json
+{
+  "items": {
+    "21": { "wikiTitle": "ONE PIECE (アニメ)" }
+  }
+}
+```
+
+どの記事にも当てたくない場合は `{ "skip": true }` を指定します。
+
+### ライセンス上の扱い
+
+**Wikipedia の本文は CC BY-SA 4.0 です。** `data/synopses.json` は MIT ではありません。各項目に記事名と記事URLを持たせ、帰属表示が本文と一緒に運ばれるようにしています。保存しているのは導入部の抜粋（最大600文字）だけで、記事全文は保存しません。
+
 ## ファイル構成
 
 ```
 index.html                        アプリ本体（単一ファイル）
 anime.html                        旧URL用のリダイレクト
-data/streaming.json               国内の配信情報（Actions が生成）
-scripts/fetch-streaming.mjs       配信情報の取得スクリプト
-scripts/serve.mjs                 手元で確認するための静的サーバー
-scripts/date-logic.mjs            テスト用に index.html から日付ロジックを取り出す
-test/date-logic.test.mjs          日付ロジックのテスト（node:test）
-CLAUDE.md                         開発時の指針とデータ源の制約
-.github/workflows/streaming.yml   日次 / 週次の更新ワークフロー
-.github/workflows/test.yml        push と PR でテストを実行する
 manifest.webmanifest              ホーム画面への追加用（任意。無くても index.html は動く）
 sw.js                             オフライン用の Service Worker（任意）
+data/streaming.json               国内の配信情報（Actions が生成）
+data/synopses.json                事前解決したあらすじ（CC BY-SA、Actions が生成）
+data/synopses-overrides.json      誤った記事に紐付いたときの手動修正
+scripts/fetch-streaming.mjs       配信情報の取得スクリプト
+scripts/fetch-synopses.mjs        日本語版Wikipediaの記事を事前に解決する
+scripts/season-targets.mjs        上記2つが共通で使う対象作品の選定
+scripts/date-logic.mjs            テスト用に index.html から日付ロジックを取り出す
+scripts/serve.mjs                 手元で確認するための静的サーバー
+test/date-logic.test.mjs          日付ロジックのテスト（node:test）
+CLAUDE.md                         開発時の指針とデータ源の制約
+.github/workflows/streaming.yml   日次 / 週次の配信情報更新
+.github/workflows/synopses.yml    週次のあらすじ更新
+.github/workflows/test.yml        push と PR でテストを実行する
 assets/                           TMDBロゴ、OG画像、アイコン、READMEのスクリーンショットとGIF
 ```
 
@@ -230,6 +263,7 @@ node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 | `data/streaming.json` | **MIT対象外**。TMDB / JustWatch に帰属 |
 | `assets/tmdb.svg` | **MIT対象外**。TMDBの商標（帰属表示のために同梱） |
 | `assets/demo.gif` / `assets/screenshot-*.jpg` | **MIT対象外**。動作中の画面を撮影したもので、写り込んでいる表紙・バナー画像の権利は各権利者に帰属 |
+| `data/synopses.json` | **MIT対象外。[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)** — [日本語版Wikipedia](https://ja.wikipedia.org/)の導入部からの抜粋。各項目に記事名と記事URLを持たせ、帰属表示が本文と一緒に運ばれるようにしている。再利用する場合は同じライセンスで |
 
 配信データは [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use) に従います。同規約はTMDBコンテンツの再許諾（sublicense）を認めていないため、このJSONを再利用する場合は、**ご自身でTMDBのAPIキーを取得し、同規約を遵守してください**。商用利用はできません（広告収入や集客目的の利用も商用と見なされます）。
 
