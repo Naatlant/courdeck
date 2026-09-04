@@ -80,8 +80,11 @@ anime.html                        旧URL用のリダイレクト
 data/streaming.json               国内の配信情報（Actions が生成）
 scripts/fetch-streaming.mjs       配信情報の取得スクリプト
 scripts/serve.mjs                 手元で確認するための静的サーバー
+scripts/date-logic.mjs            テスト用に index.html から日付ロジックを取り出す
+test/date-logic.test.mjs          日付ロジックのテスト（node:test）
 CLAUDE.md                         開発時の指針とデータ源の制約
 .github/workflows/streaming.yml   日次 / 週次の更新ワークフロー
+.github/workflows/test.yml        push と PR でテストを実行する
 ```
 
 ## 使い方
@@ -155,6 +158,16 @@ git clone https://github.com/Naatlant/courdeck.git
 cd courdeck
 node scripts/serve.mjs   # → http://localhost:8765
 ```
+
+### テスト
+
+このアプリで最も静かに壊れやすいのが日付処理です。放送日を朝5時で区切ること、深夜帯を24時を超える表記で出すこと、アクセス日から今季を判定すること。いずれも1日ずれていても画面上はそれらしく見えてしまうため、この部分にはテストを置いています。テストフレームワークは入れておらず、`node:test` と `node:assert` だけで動きます。
+
+```
+node --test
+```
+
+`scripts/date-logic.mjs` が `index.html` の `date-logic` の目印で囲まれた範囲を読み出し、テストへ渡します。`index.html` は単一ファイルのまま、ビルド工程も増えません。テストは `TZ=Asia/Tokyo` を固定します。朝5時始まりが日本の放送の慣習である一方、CIのランナーは UTC で動くためです。
 
 ### 自分のGitHub Pagesで公開する
 
