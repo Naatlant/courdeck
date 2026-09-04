@@ -88,6 +88,23 @@ by TMDB ID before fetching (8,123 entries → 5,452 requests).
 | Daily | 03:00 JST | Previous/current/next season plus all-time top, merged into the existing data (~250 requests) |
 | Weekly | Sunday 03:30 JST | Full refresh of every mapped title (~5,450 requests, about 6 minutes) |
 
+### Filling gaps in the ID mapping
+
+Upstream, [anime-offline-database](https://github.com/manami-project/anime-offline-database) is
+archived and [Fribb/anime-lists](https://github.com/Fribb/anime-lists) is looking for a new
+maintainer, so relying on the mapping alone means coverage of new titles slowly decays. Titles
+missing from the mapping are therefore **looked up on TMDB by title and broadcast year** (daily
+run only, at most 150 per run).
+
+The bar for accepting a match is deliberately high: **the year must line up and the title must
+match exactly** once punctuation and whitespace are stripped, because a wrong link is worse than
+no link. Native title → romaji → English → synonyms are tried in that order, and the first
+candidate that clears the bar wins.
+
+Those results contain TMDB identifiers, so they are **kept out of the repository** and held in
+the GitHub Actions cache instead. The published `data/streaming.json` still carries nothing but
+AniList IDs and service names.
+
 ### Coverage
 
 Only titles that exist in the ID mapping can carry streaming data, so older shows drop off.

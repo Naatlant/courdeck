@@ -143,6 +143,134 @@ for (const id of ids) {
   refByAni.set(id, ref);
   needed.add(ref);
 }
+const mappedCount = refByAni.size;
+
+/* ---------- 対応表で解決できなかった作品を自前で照合する ----------
+   上流の anime-offline-database はアーカイブ済みで、Fribb/anime-lists も
+   引き継ぎ手を探している状態にある。対応表だけに頼ると新作のカバー率が
+   じわじわ落ちていくため、タイトルと放送年から TMDB を検索して補う。
+
+   誤った紐付けは、紐付かないことより害が大きい。放送年が一致し、かつ記号と空白を
+   落とした題名が完全一致した候補だけを採用する。曖昧なものは採らない。
+
+   結果は TMDB ID を含むので、公開する data/ には絶対に置かない。ビルド用の
+   キャッシュとして別の場所に持つ（既定は .cache/、gitignore 済み。GitHub Actions
+   では actions/cache に載せてリポジトリへ入れない）。 */
+const CACHE_PATH = process.env.TMDB_CACHE || path.join(ROOT, ".cache", "tmdb-ids.json");
+const FALLBACK_MAX = Number(process.env.TMDB_FALLBACK_MAX || 150);
+const RETRY_MISS_DAYS = 30;      /* 見つからなかった作品を再検索するまでの日数 */
+
+function loadCache() {
+  try {
+    const j = JSON.parse(fs.readFileSync(CACHE_PATH, "utf8"));
+    if (j && typeof j.entries === "object" && j.entries) return j.entries;
+  } catch { /* 無ければ空から始める */ }
+  return {};
+}
+function saveCache(entries) {
+  fs.mkdirSync(path.dirname(CACHE_PATH), { recursive: true });
+  fs.writeFileSync(CACHE_PATH, JSON.stringify({
+    note: "自前照合の結果。TMDB IDを含むため公開しない。data/ へは出さないこと。",
+    updated: new Date().toISOString(),
+    entries,
+  }, null, 1) + "\n");
+}
+
+/* 記号・空白・全角半角の違いを落として比べる。Ⅲ → III、～ や空白は消える */
+const normTitle = (s) => String(s || "").normalize("NFKC").toLowerCase()
+  .replace(/[^\p{Letter}\p{Number}]/gu, "");
+
+async function anilistTitles(idList) {
+  const Q = `query($ids:[Int]){ Page(page:1,perPage:50){
+    media(id_in:$ids,type:ANIME,isAdult:false){ id format seasonYear
+      title{ romaji english native } synonyms startDate{ year } } } }`;
+  const out = new Map();
+  for (let i = 0; i < idList.length; i += 50) {
+    const r = await fetch("https://graphql.anilist.co", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: Q, variables: { ids: idList.slice(i, i + 50) } }),
+    });
+    if (!r.ok) throw new Error("AniList HTTP " + r.status);
+    const j = await r.json();
+    if (j.errors) throw new Error(j.errors.map((e) => e.message).join(" / "));
+    for (const m of j.data.Page.media) out.set(m.id, m);
+    if (i + 50 < idList.length) await sleep(700);   /* AniList は 30 リクエスト/分 */
+  }
+  return out;
+}
+
+async function tmdbSearch(kind, query) {
+  const u = new URL(`https://api.themoviedb.org/3/search/${kind}`);
+  u.searchParams.set("api_key", KEY);
+  u.searchParams.set("query", query);
+  u.searchParams.set("include_adult", "false");
+  const r = await fetch(u);
+  await sleep(60);                                  /* TMDB は毎秒40程度が上限 */
+  if (!r.ok) return [];
+  return (await r.json())?.results || [];
+}
+
+/* 年が合い、題名が完全一致したものだけを通す */
+function acceptable(cand, kind, wantYear, wantNorms) {
+  const date = kind === "tv" ? cand.first_air_date : cand.release_date;
+  const y = date ? Number(String(date).slice(0, 4)) : null;
+  /* 年末開始や年跨ぎ放送があるので1年のずれまでは許す。年が不明な候補は採らない */
+  if (!y || !wantYear || Math.abs(y - wantYear) > 1) return false;
+  return [cand.name, cand.original_name, cand.title, cand.original_title]
+    .some((n) => n && wantNorms.has(normTitle(n)));
+}
+
+const cache = loadCache();
+let fromCache = 0, resolved = 0, missed = 0, searchCalls = 0;
+const unknown = [];
+for (const id of ids) {
+  if (refByAni.has(id)) continue;
+  const e = cache[id];
+  /* 判明済みの結果はモードに関係なく使う。再検索はしない */
+  if (e && e.ref) { refByAni.set(id, e.ref); needed.add(e.ref); fromCache++; continue; }
+  /* 前回見つからなかったものをすぐ再検索しても無駄なので、しばらく置く */
+  if (e && e.missAt && Date.now() - Date.parse(e.missAt) < RETRY_MISS_DAYS * 86400000) continue;
+  unknown.push(id);
+}
+
+/* 検索は日次（今季周辺）のときだけ行う。全作品モードで走らせると古い作品まで
+   総当たりになり、リクエストが跳ね上がるため */
+if (!ALL && unknown.length) {
+  const targets = unknown.slice(0, FALLBACK_MAX);
+  console.log(`対応表に無い ${unknown.length}件のうち ${targets.length}件を自前で照合します…`);
+  const meta = await anilistTitles(targets);
+  for (const id of targets) {
+    const m = meta.get(id);
+    if (!m) continue;
+    const year = m.seasonYear || m.startDate?.year || null;
+    const kind = m.format === "MOVIE" ? "movie" : "tv";
+    const queries = [m.title?.native, m.title?.romaji, m.title?.english,
+                     ...(m.synonyms || []).slice(0, 2)].filter(Boolean);
+    const norms = new Set(queries.map(normTitle).filter(Boolean));
+    let hit = null;
+    for (const q of queries) {
+      searchCalls++;
+      const found = (await tmdbSearch(kind, q)).find((c) => acceptable(c, kind, year, norms));
+      if (found) { hit = `${kind}/${found.id}`; break; }
+    }
+    const now = new Date().toISOString();
+    if (hit) {
+      cache[id] = { ref: hit, title: queries[0], year, at: now };
+      refByAni.set(id, hit);
+      needed.add(hit);
+      resolved++;
+    } else {
+      cache[id] = { missAt: now, title: queries[0] || null, year };
+      missed++;
+    }
+  }
+}
+saveCache(cache);
+
+console.log(`対応表で解決  : ${mappedCount}件`);
+console.log(`自前照合で追加: ${resolved}件（キャッシュから ${fromCache}件・不一致 ${missed}件` +
+            `・検索 ${searchCalls}回）`);
 console.log(`TMDB IDあり: ${refByAni.size}件 → 重複排除後 ${needed.size}件のリクエスト\n`);
 
 const result = new Map();                      /* ref -> サービス名の配列 */
