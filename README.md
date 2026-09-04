@@ -52,9 +52,15 @@ previous day and written 25:30, the way Japanese schedules do it.
 
 ![Courdeck weekly schedule: seven day columns starting from Friday, each listing broadcasts by time, with late-night slots shown as 24:00, 25:30 and 26:38](assets/screenshot-schedule-en.jpg)
 
-**Hover preview** — banner art, score, streaming services and the next episode, without leaving the list.
+**Preview** — banner art, score, streaming services and the next episode, without leaving the list.
+Hover with a mouse, Tab to it with a keyboard, or use the button on the card on a touch screen.
 
-![Courdeck hover preview: an enlarged panel floating over the list with banner art, score, genre tags, streaming badges and the next episode date and time](assets/screenshot-preview-en.jpg)
+![Courdeck preview panel: an enlarged panel floating over the list with banner art, score, genre tags, streaming badges and the next episode date and time](assets/screenshot-preview-en.jpg)
+
+**Favorites** — a tab holding just the titles you starred. Export and import as a file, and export
+the next episodes to your calendar, all from here. Nothing leaves this browser.
+
+![Courdeck favorites tab: a bar with "Export to a file", "Import from a file" and "Export to calendar" buttons alongside a note saying favorites live only in this browser, above five starred title cards](assets/screenshot-favorites-en.jpg)
 
 ## Tech stack
 
