@@ -336,6 +336,7 @@
     <div class="favbar">
       <button id="favExport" data-i18n="fav.export">ファイルに書き出す</button>
       <button id="favImport" data-i18n="fav.import">ファイルから読み込む</button>
+      <button id="favIcs" data-i18n="fav.ics">カレンダーに書き出す</button>
       <input type="file" id="favFile" accept="application/json,.json" hidden>
       <span class="note" data-i18n="fav.note">お気に入りはこの端末のブラウザにのみ保存されています。書き出したファイルが端末の外へ送られることはありません。</span>
       <div class="ask" id="favAsk" hidden></div>
@@ -451,6 +452,11 @@ var I18N = {
     loading: "読み込み中…", empty: "該当する作品がありません。",
     favEmpty: "お気に入りはまだありません。カードの★で追加できます。",
     "fav.export": "ファイルに書き出す", "fav.import": "ファイルから読み込む",
+    "fav.ics": "カレンダーに書き出す",
+    icsCalName: "Courdeck のお気に入り",
+    icsNone: "次回放送が分かるお気に入りがありません。",
+    icsSaved: "{n}件の次回放送をカレンダーファイルに書き出しました。",
+    icsSkipped: "（放送予定が分からない{n}件は除きました）",
     "fav.note": "お気に入りはこの端末のブラウザにのみ保存されています。書き出したファイルが端末の外へ送られることはありません。",
     favNone: "書き出せるお気に入りがありません。",
     favSaved: "{n}件を書き出しました。",
@@ -521,6 +527,11 @@ var I18N = {
     loading: "Loading…", empty: "No titles match these filters.",
     favEmpty: "No favorites yet. Use the ★ on any card to add one.",
     "fav.export": "Export to a file", "fav.import": "Import from a file",
+    "fav.ics": "Export to calendar",
+    icsCalName: "Courdeck favorites",
+    icsNone: "None of your favorites has a known next episode.",
+    icsSaved: "Exported the next episode for {n} titles.",
+    icsSkipped: " ({n} titles were skipped because their air time is unknown.)",
     "fav.note": "Favorites live only in this browser, on this device. Exporting writes a file locally and sends nothing anywhere.",
     favNone: "There are no favorites to export.",
     favSaved: "Exported {n} favorites.",
@@ -1582,10 +1593,21 @@ function favMsg(text, isErr){
   box.hidden = !text;
 }
 
-function favFileName(){
+function stamp(){
   var d = new Date();
   var p = function(n){ return ("0" + n).slice(-2); };
-  return "courdeck-favorites-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + ".json";
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+/* 端末内へ保存するだけ。外部への送信はしない */
+function downloadFile(text, name, type){
+  var url = URL.createObjectURL(new Blob([text], {type: type}));
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 0);
 }
 
 function exportFavs(){
@@ -1595,15 +1617,78 @@ function exportFavs(){
     app: "courdeck", version: FAV_FORMAT,
     exportedAt: new Date().toISOString(), count: list.length, favorites: list
   }, null, 2);
-  var url = URL.createObjectURL(new Blob([body], {type: "application/json"}));
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = favFileName();
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 0);
+  downloadFile(body, "courdeck-favorites-" + stamp() + ".json", "application/json");
   favMsg(t("favSaved", {n: list.length}));
+}
+
+/* ── お気に入りの次回放送を iCalendar として書き出す ─────────────
+   購読用のURL配信はサーバーが要るので作らない。ファイルのダウンロードに留める。
+   保持しているのは nextAiringEpisode の1話分だけなので、1作品につき1件になる。 */
+var ICS_DEFAULT_MIN = 30;
+
+function icsEsc(s){
+  return String(s == null ? "" : s)
+    .replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,")
+    .replace(/\r?\n/g, "\\n");
+}
+/* RFC 5545 は1行75オクテットまで。日本語が途中で割れないようバイト数で数えて折る。
+   継続行は先頭に空白を1つ置く決まりで、その空白も1オクテットとして数える */
+function icsFold(line){
+  var out = "", len = 0, i = 0;
+  while (i < line.length){
+    var cp = line.codePointAt(i);
+    var ch = String.fromCodePoint(cp);
+    var b = cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4;
+    if (len + b > 73){ out += "\r\n "; len = 1; }
+    out += ch;
+    len += b;
+    i += ch.length;
+  }
+  return out;
+}
+/* 放送時刻は絶対時刻なのでUTCで書く。カレンダー側が閲覧者の地域で表示するため、
+   日本時間で見れば 25:30 の放送は翌日の 1:30 として出る */
+function icsUtc(d){
+  var p = function(n){ return ("0" + n).slice(-2); };
+  return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + "T" +
+         p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + "Z";
+}
+
+function exportIcs(){
+  var now = new Date(), rows = [], skipped = 0;
+  Object.keys(favs).forEach(function(k){
+    var m = favs[k];
+    var ep = m && m.nextAiringEpisode;
+    /* 放送予定が分からない作品（完結済みなど）は書き出せない */
+    if (!ep || !ep.airingAt || !ep.episode) { skipped++; return; }
+    rows.push({m: m, ep: ep});
+  });
+  if (!rows.length){ favMsg(t("icsNone"), true); return; }
+
+  var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Naatlant//Courdeck//EN",
+               "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + icsEsc(t("icsCalName"))];
+  rows.forEach(function(r){
+    var start = new Date(r.ep.airingAt * 1000);
+    var end = new Date(start.getTime() + (r.m.duration || ICS_DEFAULT_MIN) * 60000);
+    var svc = svcOf(r.m.id);
+    var desc = (svc ? svc.map(svcName).join(", ") : "") +
+      (r.m.siteUrl ? (svc ? "\n\n" : "") + r.m.siteUrl : "");
+    lines.push("BEGIN:VEVENT",
+      /* 作品IDと話数から決まるので、同じファイルを二度読んでも重複しない */
+      "UID:courdeck-" + r.m.id + "-ep" + r.ep.episode + "@naatlant.github.io",
+      "DTSTAMP:" + icsUtc(now),
+      "DTSTART:" + icsUtc(start),
+      "DTEND:" + icsUtc(end),
+      "SUMMARY:" + icsEsc(title(r.m) + " " + t("epNo", {n: r.ep.episode})));
+    if (desc) lines.push("DESCRIPTION:" + icsEsc(desc));
+    if (r.m.siteUrl) lines.push("URL:" + icsEsc(r.m.siteUrl));
+    lines.push("END:VEVENT");
+  });
+  lines.push("END:VCALENDAR");
+
+  downloadFile(lines.map(icsFold).join("\r\n") + "\r\n",
+    "courdeck-schedule-" + stamp() + ".ics", "text/calendar;charset=utf-8");
+  favMsg(t("icsSaved", {n: rows.length}) + (skipped ? t("icsSkipped", {n: skipped}) : ""));
 }
 
 /* 中身を確かめるだけで、お気に入りには触れない。壊れたファイルで既存データを失わないため */
@@ -1848,6 +1933,7 @@ el("calThis").disabled = true;
 el("favExport").onclick = exportFavs;
 el("favImport").onclick = function(){ el("favFile").value = ""; el("favFile").click(); };
 el("favFile").onchange = function(){ readFavFile(this.files && this.files[0]); };
+el("favIcs").onclick = exportIcs;
 el("calSeason").onchange = onCalPrefChange;
 el("calNoShort").onchange = onCalPrefChange;
 el("calFav").onchange = onCalPrefChange;
