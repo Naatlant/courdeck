@@ -78,6 +78,7 @@ index.html                        アプリ本体（単一ファイル）
 anime.html                        旧URL用のリダイレクト
 data/streaming.json               国内の配信情報（Actions が生成）
 scripts/fetch-streaming.mjs       配信情報の取得スクリプト
+scripts/serve.mjs                 手元で確認するための静的サーバー
 .github/workflows/streaming.yml   日次 / 週次の更新ワークフロー
 ```
 
@@ -150,7 +151,7 @@ curl -O https://naatlant.github.io/courdeck/index.html
 ```
 git clone https://github.com/Naatlant/courdeck.git
 cd courdeck
-npx serve .        # 任意の静的サーバーで可
+node scripts/serve.mjs   # → http://localhost:8765
 ```
 
 ### 自分のGitHub Pagesで公開する

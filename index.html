@@ -95,6 +95,7 @@
   .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;
     box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer;
     transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+  .card:focus-visible,.slot:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   .card:hover{border-color:var(--accent);transform:translateY(-4px);
     box-shadow:0 12px 26px rgba(0,0,0,.30)}
   @media (prefers-reduced-motion: reduce){
@@ -304,7 +305,7 @@
     <div class="stats" id="stats"></div>
   </div>
 
-  <div id="msg" class="msg">読み込み中…</div>
+  <div id="msg" class="msg" role="status" aria-live="polite">読み込み中…</div>
   <div class="grid" id="grid"></div>
   <div class="cal" id="cal" hidden></div>
   <div id="more"></div>
@@ -312,7 +313,7 @@
   <footer class="credits" id="credits"></footer>
 </div>
 
-<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"><div class="sheet" id="sheet"></div></div>
 
 <script>
 "use strict";
@@ -433,7 +434,7 @@ var I18N = {
     noDesc: "あらすじは登録されていません。", srcWiki: "出典: ウィキペディア日本語版",
     srcAni: "出典: AniList（英語）", showEn: "英語の原文", showJa: "日本語の概要",
     wikiSearching: "日本語の概要を検索中…", epNo: "第{n}話", nextEp: "次回 第{n}話",
-    dash: "—"
+    openDetail: "{n} の詳細を開く", dash: "—"
   },
   en: {
     "app.title": "Courdeck", lead: "Seasonal and past anime pulled from public APIs, with streaming availability for Japan.", credits: CREDITS_EN, langBtn: "日本語",
@@ -483,7 +484,7 @@ var I18N = {
     noDesc: "No synopsis available.", srcWiki: "Source: Japanese Wikipedia",
     srcAni: "Source: AniList (English)", showEn: "English original", showJa: "Japanese summary",
     wikiSearching: "Looking for a Japanese summary…", epNo: "Ep. {n}", nextEp: "Next: ep. {n}",
-    dash: "—"
+    openDetail: "Open details for {n}", dash: "—"
   }
 };
 
@@ -837,7 +838,8 @@ function renderGrid(){
     var gen = (m.genres || []).slice(0, 2).map(function(x){
       return '<span class="tag">' + esc(genreName(x)) + "</span>";
     }).join("");
-    return '<article class="card" data-id="' + m.id + '">' +
+    return '<article class="card" data-id="' + m.id + '" tabindex="0" role="button"' +
+      ' aria-label="' + esc(t("openDetail", {n: title(m)})) + '">' +
       '<div class="thumb">' + img + sc +
       '<button class="fav' + on + '" data-fav="' + m.id + '" title="' + t("tab.fav") + '">★</button></div>' +
       '<div class="body"><div class="ttl">' + esc(title(m)) + "</div>" +
@@ -1017,7 +1019,8 @@ function renderCalendar(){
         ? '<img loading="lazy" src="' + esc(m.coverImage.medium) + '" alt="">' : "";
       var sc = m.averageScore ? (lang === "ja" ? " ・ " : " · ") + (m.averageScore / 10).toFixed(1) : "";
       var star = favs[m.id] ? '<span class="fv">★</span>' : "";
-      return '<div class="slot" data-id="' + m.id + '">' + img +
+      return '<div class="slot" data-id="' + m.id + '" tabindex="0" role="button"' +
+        ' aria-label="' + esc(t("openDetail", {n: title(m)})) + '">' + img +
         '<div class="info"><div class="t">' + airTime(r.at) + star + "</div>" +
         '<div class="n">' + esc(title(m)) + "</div>" +
         '<div class="e">' + t("epNo", {n: r.ep}) + sc + "</div></div></div>";
@@ -1242,7 +1245,7 @@ function openDetail(id){
     (m.bannerImage ? '<div class="banner" style="background-image:url(' + esc(m.bannerImage) + ')"></div>' : "") +
     '<div class="inner"><button class="close" id="closeBtn">' + t("close") + "</button>" +
     '<button class="close" id="favBtn" style="margin-right:8px"></button>' +
-    "<h3>" + esc(title(m)) + "</h3>" +
+    '<h3 id="sheetTitle">' + esc(title(m)) + "</h3>" +
     '<p class="nat">' + esc(m.title.romaji || "") +
       (m.title.english ? " / " + esc(m.title.english) : "") + "</p>" +
     '<div class="cols">' +
@@ -1271,6 +1274,7 @@ function openDetail(id){
     '<div class="desc" id="desc"></div></div>';
   el("modal").classList.add("open");
   el("closeBtn").onclick = closeDetail;
+  el("closeBtn").focus();
   renderFavBtn(m.id);
   el("favBtn").onclick = function(){ toggleFav(m.id); };
 
@@ -1284,7 +1288,23 @@ function openDetail(id){
     renderDesc();
   });
 }
-function closeDetail(){ el("modal").classList.remove("open"); }
+function closeDetail(){
+  el("modal").classList.remove("open");
+  /* 開く操作をした要素へフォーカスを戻す */
+  if (lastTrigger && document.body.contains(lastTrigger)) lastTrigger.focus();
+  lastTrigger = null;
+}
+var lastTrigger = null;
+/* モーダルの外へタブ移動しないよう内側で循環させる */
+function trapFocus(e){
+  if (e.key !== "Tab" || !el("modal").classList.contains("open")) return;
+  var f = el("sheet").querySelectorAll("a[href], button, [tabindex]:not([tabindex='-1'])");
+  if (!f.length) return;
+  var first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+}
+document.addEventListener("keydown", trapFocus);
 
 function toggleFav(id){
   if (favs[id]) delete favs[id];
@@ -1457,13 +1477,23 @@ el("calNoShort").onchange = onCalPrefChange;
 el("calFav").onchange = onCalPrefChange;
 el("cal").addEventListener("click", function(e){
   var slot = e.target.closest(".slot");
-  if (slot) openDetail(Number(slot.dataset.id));
+  if (slot){ lastTrigger = slot; openDetail(Number(slot.dataset.id)); }
 });
+function activateKey(e, selector){
+  if (e.key !== "Enter" && e.key !== " ") return;
+  var el2 = e.target.closest(selector);
+  if (!el2 || e.target.closest("button")) return;
+  e.preventDefault();
+  lastTrigger = el2;
+  openDetail(Number(el2.dataset.id));
+}
+el("grid").addEventListener("keydown", function(e){ activateKey(e, ".card"); });
+el("cal").addEventListener("keydown", function(e){ activateKey(e, ".slot"); });
 el("grid").addEventListener("click", function(e){
   var fav = e.target.closest("[data-fav]");
   if (fav){ e.stopPropagation(); toggleFav(Number(fav.dataset.fav)); return; }
   var card = e.target.closest(".card");
-  if (card) openDetail(Number(card.dataset.id));
+  if (card){ lastTrigger = card; openDetail(Number(card.dataset.id)); }
 });
 el("modal").addEventListener("click", function(e){ if (e.target.id === "modal") closeDetail(); });
 document.addEventListener("keydown", function(e){ if (e.key === "Escape") closeDetail(); });
