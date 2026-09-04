@@ -9,7 +9,10 @@
 index.html    アプリ本体。これ1枚で動く（HTML/CSS/JS、依存パッケージなし）
 anime.html    旧URL用のリダイレクト
 data/streaming.json          国内の配信情報。GitHub Actions が生成する
-scripts/fetch-streaming.mjs  上記の取得スクリプト
+data/synopses.json           日本語版Wikipediaのあらすじ冒頭。同じく Actions が生成する
+scripts/fetch-streaming.mjs  配信情報の取得スクリプト
+scripts/fetch-synopses.mjs   あらすじの取得スクリプト
+scripts/season-targets.mjs   上記2つが共通で使う対象作品の選定
 scripts/serve.mjs            手元で確認するための静的サーバー
 ```
 
@@ -51,6 +54,14 @@ ODbLは派生データベースの同一ライセンス公開を求めるが、T
 gitignore 済みで、GitHub Actions では `actions/cache` に載せている。`data/` へ移したり公開物に
 混ぜたりしないこと。失われても1回150件の上限つきで引き直されるだけなので、
 「消えると困るからリポジトリに置く」という判断はしない。
+
+`data/synopses.json` は **MIT ではなく CC BY-SA 4.0**。Wikipedia の本文だから。各項目に記事名と
+記事URLを必ず持たせ、帰属表示が本文と一緒に運ばれる形を崩さない。保存するのは導入部の抜粋だけで、
+記事全文は保存しない。README のライセンス表からこの行を消さないこと。
+
+**あらすじの照合順序は2か所にある。** `index.html` の実行時フォールバックと
+`scripts/fetch-synopses.mjs` の事前解決で同じ規則（完全一致 → 季数表記を落とした題名 → 検索）を
+使っている。片方だけ直すと、静的ファイルに載る作品と実行時に拾える作品が食い違う。
 
 TMDBのAPIキーは GitHub Secrets（`TMDB_API_KEY`）に置く。公開物には絶対に含めない。
 ローカル実行時は `.tmdb_key`（gitignore済み）から読む。

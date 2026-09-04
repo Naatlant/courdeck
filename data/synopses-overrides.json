@@ -1,0 +1,9 @@
+{
+  "note": "自動照合が誤った記事に紐付いたときに、人が手で直すためのファイル。scripts/fetch-synopses.mjs が生成時にこちらを優先する。キーは AniList の作品ID。wikiTitle に日本語版Wikipediaの記事名をそのまま書く。どの記事にも当てたくない場合は skip を true にする。",
+  "items": {
+    "19": {
+      "_why": "『MONSTER』が「Little Glee Monster」に紐付いた。題名の包含判定では、短い題名が長い別作品の題名に含まれてしまう場合を弾けない",
+      "wikiTitle": "MONSTER (漫画)"
+    }
+  }
+}
