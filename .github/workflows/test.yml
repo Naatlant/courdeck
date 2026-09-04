@@ -1,0 +1,28 @@
+name: テスト
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # 日付ロジックは放送日を朝5時で切る日本時間前提の処理。ランナーは UTC なので明示する。
+      # テスト側でも TZ を設定しているが、実行環境を見て分かるようにここにも書いておく。
+      TZ: Asia/Tokyo
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # 依存パッケージは無いので install は不要。node:test と node:assert だけで動く。
+      - name: 日付ロジックのテスト
+        run: node --test
