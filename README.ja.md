@@ -18,7 +18,7 @@
 | 絞り込み | 年（1960年〜）× 季節 × 並び順6種 × 放送形式 × ジャンル × 最低スコア × キーワード検索 |
 | 自動集計 | 件数・平均スコア・放送中本数、ジャンル / 制作会社 / 原作媒体の分布 |
 | 週間放送スケジュール | 7日分を曜日別・時刻順に表示。**前後の週へ移動可能**。放送日は朝5時始まりで区切り、深夜帯は24時制表記（25:30 = 翌1:30） |
-| **国内の配信サービス** | dアニメ / Prime Video / U-NEXT / Netflix / Hulu など、日本で視聴できるサービスを表示（6,152作品） |
+| **国内の配信サービス** | dアニメ / Prime Video / U-NEXT / Netflix / Hulu など、日本で視聴できるサービスを表示（6,000作品以上） |
 | **日本語のあらすじ** | 日本語版Wikipediaの導入部を表示。記事の照合は **GitHub Actions が事前に済ませている**ので、詳細を開いてもWikipediaへのリクエストは出ない。事前解決に無い作品は従来どおり実行時に取得し、それも無ければAniListの英語説明にフォールバック |
 | **プレビューパネル** | バナー画像・スコア・配信サービス・次回放送を含む拡大パネル。マウスではホバー、キーボードでは Tab でフォーカスした時点、タッチ環境ではカード上のボタンから開く。`Esc` で閉じる |
 | 詳細表示 | 放送期間、次回放送日時、制作会社、原作媒体、PV、公式・配信リンク |
@@ -54,7 +54,7 @@
 
 | 区分 | 内容 |
 | --- | --- |
-| フロントエンド | 単一HTMLファイル（`index.html`、約1,450行）。HTML + CSS + JavaScript のみ、依存パッケージなし |
+| フロントエンド | 単一HTMLファイル（`index.html`）。HTML + CSS + JavaScript のみ、依存パッケージなし |
 | 作品情報 | AniList GraphQL API（`media` / `airingSchedules` の2クエリ、フィールド定義は共有） |
 | あらすじ | 日本語版Wikipedia API（完全一致 → 季数を除いた題名 → 検索の3段階で照合）。GitHub Actions が事前に解決し JSON として配信 |
 | 配信情報 | TMDB API（データ提供元は JustWatch）。GitHub Actions で取得し JSON として配信 |
@@ -69,7 +69,7 @@
 flowchart LR
     A[GitHub Actions<br/>日次 / 週次] --> B[Fribb/anime-lists<br/>AniList ID → TMDB ID]
     B --> C[TMDB API<br/>watch/providers region=JP]
-    C --> D[data/streaming.json<br/>6,152作品 / 106KB]
+    C --> D[data/streaming.json<br/>6,000作品以上]
     D --> E[index.html<br/>閲覧者のブラウザ]
 ```
 
@@ -92,14 +92,24 @@ flowchart LR
 
 ### カバー率
 
-対応表にTMDB IDが存在する作品のみが対象です。古い作品ほど下がります。
+古い作品ほど下がります。
 
 | 対象 | 配信情報を表示できた割合 |
 | --- | --- |
-| 歴代トップ50 | 88% |
-| 2006年春 | 82% |
-| 2020年春 | 76% |
-| 1998年春 | 42% |
+| 歴代トップ50 | 88%（44/50） |
+| 2006年春 | 56%（59/106） |
+| 2020年春 | 55%（50/91） |
+| 1998年春 | 42%（20/48） |
+
+分母は**アプリの一覧に実際に並ぶ作品**です。AniList で `isAdult:false` の全作品で、形式（TV / 劇場版 / OVA / ONA など）は問いません。TV作品だけに絞ると10ポイント前後上がりますが、利用者が目にする画面とは対応しなくなるため採っていません。
+
+この数字は `data/streaming.json` の中身に依存し、更新のたびに動きます。測り直せます。
+
+```
+node scripts/coverage.mjs
+```
+
+（測定日: 2026-09-04）
 
 ## あらすじの仕組み
 
@@ -142,6 +152,7 @@ data/synopses-overrides.json      誤った記事に紐付いたときの手動�
 scripts/fetch-streaming.mjs       配信情報の取得スクリプト
 scripts/fetch-synopses.mjs        日本語版Wikipediaの記事を事前に解決する
 scripts/season-targets.mjs        上記2つが共通で使う対象作品の選定
+scripts/coverage.mjs              READMEのカバー率を測り直す
 scripts/date-logic.mjs            テスト用に index.html から日付ロジックを取り出す
 scripts/serve.mjs                 手元で確認するための静的サーバー
 test/date-logic.test.mjs          日付ロジックのテスト（node:test）
