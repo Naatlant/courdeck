@@ -6,6 +6,8 @@
 
 **→ https://naatlant.github.io/courdeck/**
 
+![Courdeck の操作の様子。一覧でホバープレビューを開き、週間放送スケジュールへ切り替えて翌週へ移動し、表示言語を日本語から英語に切り替えている](assets/demo.gif)
+
 アプリ本体は依存ライブラリもビルドも不要な単一HTMLファイルです。閲覧者側にAPIキーは要りません。
 
 ## 機能
@@ -28,6 +30,20 @@
 | **日本語 / English** | 右上のボタンでいつでも切り替え。作品名・ジャンル・形式・日付表記まで追従し、設定は記憶され URL にも入る（`?lang=en`） |
 
 レスポンシブ対応（PC / タブレット / スマートフォン）、OSのダークモード設定に自動追従します。
+
+### 画面
+
+**一覧** — 今季を人気順で表示。カード下部の配信バッジが、他のアニメデータベースには無い部分です。
+
+![Courdeck の一覧表示。2026年夏アニメのカードが並び、カバー画像・スコア・放送状況・ジャンルに加えて、dアニメ(Amazon) や Prime Video などの国内配信バッジが出ている](assets/screenshot-list-ja.jpg)
+
+**曜日表** — 放送日は朝5時始まり。深夜1:30の放送は前日の 25:30 として並びます。
+
+![Courdeck の週間放送スケジュール。金曜から7日分の列に放送予定が時刻順で並び、深夜帯は 24:00 / 25:30 / 26:38 と24時制で表記されている](assets/screenshot-schedule-ja.jpg)
+
+**ホバープレビュー** — 一覧を離れずに、バナー画像・スコア・配信サービス・次回放送を確認できます。
+
+![Courdeck のホバープレビュー。一覧の上に拡大パネルが浮かび、バナー画像・スコア・ジャンル・配信バッジ・次回放送の日時が表示されている](assets/screenshot-preview-ja.jpg)
 
 ## 技術構成
 
@@ -82,6 +98,7 @@ scripts/fetch-streaming.mjs       配信情報の取得スクリプト
 scripts/serve.mjs                 手元で確認するための静的サーバー
 CLAUDE.md                         開発時の指針とデータ源の制約
 .github/workflows/streaming.yml   日次 / 週次の更新ワークフロー
+assets/                           TMDBロゴ、OG画像、READMEのスクリーンショットとGIF
 ```
 
 ## 使い方
@@ -188,6 +205,7 @@ node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 | `index.html` / `anime.html` / `scripts/` / `.github/` | MIT |
 | `data/streaming.json` | **MIT対象外**。TMDB / JustWatch に帰属 |
 | `assets/tmdb.svg` | **MIT対象外**。TMDBの商標（帰属表示のために同梱） |
+| `assets/demo.gif` / `assets/screenshot-*.jpg` | **MIT対象外**。動作中の画面を撮影したもので、写り込んでいる表紙・バナー画像の権利は各権利者に帰属 |
 
 配信データは [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use) に従います。同規約はTMDBコンテンツの再許諾（sublicense）を認めていないため、このJSONを再利用する場合は、**ご自身でTMDBのAPIキーを取得し、同規約を遵守してください**。商用利用はできません（広告収入や集客目的の利用も商用と見なされます）。
 
