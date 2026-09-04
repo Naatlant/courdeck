@@ -435,7 +435,7 @@ var CREDITS_EN =
 
 var I18N = {
   ja: {
-    "app.title": "Courdeck", lead: "AniList の公開APIから今季・過去シーズンの作品を自動取得し、国内の配信状況とあわせて表示します。", credits: CREDITS_JA, langBtn: "English",
+    lead: "AniList の公開APIから今季・過去シーズンの作品を自動取得し、国内の配信状況とあわせて表示します。", credits: CREDITS_JA,
     docTitle: "Courdeck｜今季アニメ・週間放送表・国内の配信状況",
     "p.current": "今季", "p.prev": "前季", "p.next": "来季",
     "p.airing": "放送中の話題作", "p.alltime": "歴代トップ", "p.year": "今年のベスト",
@@ -492,6 +492,7 @@ var I18N = {
     unitWorks: " 件", unitShows: " 本", allSuffix: "（全件）",
     scopeAll: "全期間", scopeAiring: "放送中の作品",
     scopeSearchA: "「", scopeSearchB: "」の検索結果", scopeYear: "年", scopeSeason: "アニメ",
+    scopeOrder: "{y}{s}", epsShort: "{n}話", dot: " ・ ", listSep: "、",
     calRange: "{a} 〜 {b} の放送予定", calShown: "　表示 {n} 本 / 取得 {m} 本",
     calFavNone: "　お気に入りに登録した作品は今週の放送予定にありません。",
     calNote: "　深夜帯は24時制で表示しています（25:30 = 翌1:30）。時刻は端末のタイムゾーン基準です。",
@@ -510,7 +511,7 @@ var I18N = {
     searchTip: "/ キーでここにフォーカス", dash: "—"
   },
   en: {
-    "app.title": "Courdeck", lead: "Seasonal and past anime pulled from public APIs, with streaming availability for Japan.", credits: CREDITS_EN, langBtn: "日本語",
+    lead: "Seasonal and past anime pulled from public APIs, with streaming availability for Japan.", credits: CREDITS_EN,
     docTitle: "Courdeck | Seasonal anime, weekly schedule, streaming in Japan",
     "p.current": "This season", "p.prev": "Previous", "p.next": "Next",
     "p.airing": "Trending now", "p.alltime": "All-time best", "p.year": "Best of the year",
@@ -568,6 +569,7 @@ var I18N = {
     unitWorks: "", unitShows: "", allSuffix: " (all)",
     scopeAll: "All years", scopeAiring: "Currently airing",
     scopeSearchA: "Search results for “", scopeSearchB: "”", scopeYear: "", scopeSeason: "",
+    scopeOrder: "{s} {y}", epsShort: "{n} eps", dot: " · ", listSep: ", ",
     calRange: "Broadcasts for {a} – {b}", calShown: "　Showing {n} of {m}",
     calFavNone: "　None of your favorites air this week.",
     calNote: "　Late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning). Times follow your device's time zone.",
@@ -965,11 +967,11 @@ function title(m){
                        : (x.english || x.romaji || x.native || "—");
 }
 function studios(m){ return m.studios && m.studios.nodes ? m.studios.nodes.map(function(s){ return s.name; }) : []; }
-function sep(){ return lang === "ja" ? "、" : ", "; }
+function sep(){ return t("listSep"); }
 function subtitle(m){
-  var eps = m.episodes ? (lang === "ja" ? m.episodes + "話" : m.episodes + " eps") : "";
+  var eps = m.episodes ? t("epsShort", {n: m.episodes}) : "";
   var parts = [formatName(m.format) || m.format || "", eps, studios(m)[0] || ""];
-  return parts.filter(Boolean).join(lang === "ja" ? " ・ " : " · ");
+  return parts.filter(Boolean).join(t("dot"));
 }
 function statusTag(m){
   var cls = m.status === "RELEASING" ? "air" : m.status === "NOT_YET_RELEASED" ? "pre" : "end";
@@ -1048,11 +1050,12 @@ function scopeLabel(){
   if (state.q.trim()) return t("scopeSearchA") + state.q.trim() + t("scopeSearchB");
   if (state.status === "RELEASING") return t("scopeAiring");
   var season = state.season ? seasonName(state.season) : "";
-  if (lang === "ja"){
-    return (state.year ? state.year + "年" : t("scopeAll")) + (season ? season + "アニメ" : "");
-  }
-  var y = state.year ? String(state.year) : t("scopeAll");
-  return (season ? season + " " : "") + y;
+  /* 「2026年夏アニメ」と "Summer 2026" は語順が違う。並べ方も辞書に持たせて
+     ここで言語を分岐させない（文言を直書きしないため） */
+  return t("scopeOrder", {
+    y: state.year ? state.year + t("scopeYear") : t("scopeAll"),
+    s: season ? season + t("scopeSeason") : ""
+  }).trim();
 }
 function renderSummary(){
   var list = state.items;
@@ -1185,7 +1188,7 @@ function renderCalendar(){
       var m = r.m;
       var img = m.coverImage && m.coverImage.medium
         ? '<img loading="lazy" src="' + esc(m.coverImage.medium) + '" alt="">' : "";
-      var sc = m.averageScore ? (lang === "ja" ? " ・ " : " · ") + (m.averageScore / 10).toFixed(1) : "";
+      var sc = m.averageScore ? t("dot") + (m.averageScore / 10).toFixed(1) : "";
       var star = favs[m.id] ? '<span class="fv">★</span>' : "";
       return '<div class="slot" data-id="' + m.id + '" tabindex="0" role="button"' +
         ' aria-label="' + esc(t("openDetail", {n: title(m)})) + '">' + img +
@@ -1800,7 +1803,7 @@ function fillYearSelect(){
   var y = el("year"), cur = y.value;
   var html = '<option value="">' + t("none") + "</option>";
   for (var v = CUR.year + 1; v >= 1960; v--){
-    html += '<option value="' + v + '">' + v + (lang === "ja" ? "年" : "") + "</option>";
+    html += '<option value="' + v + '">' + v + t("scopeYear") + "</option>";
   }
   y.innerHTML = html;
   y.value = cur;

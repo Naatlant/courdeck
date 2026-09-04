@@ -8,12 +8,18 @@
 ```
 index.html    アプリ本体。これ1枚で動く（HTML/CSS/JS、依存パッケージなし）
 anime.html    旧URL用のリダイレクト
+manifest.webmanifest         ホーム画面への追加用。任意の拡張
+sw.js                        オフライン用の Service Worker。任意の拡張
 data/streaming.json          国内の配信情報。GitHub Actions が生成する
 data/synopses.json           日本語版Wikipediaのあらすじ冒頭。同じく Actions が生成する
+data/synopses-overrides.json あらすじの誤マッチを人が直すためのファイル
 scripts/fetch-streaming.mjs  配信情報の取得スクリプト
 scripts/fetch-synopses.mjs   あらすじの取得スクリプト
 scripts/season-targets.mjs   上記2つが共通で使う対象作品の選定
+scripts/coverage.mjs         READMEのカバー率を測り直す
+scripts/date-logic.mjs       テスト用に index.html から日付ロジックを取り出す
 scripts/serve.mjs            手元で確認するための静的サーバー
+test/date-logic.test.mjs     日付ロジックのテスト（node:test）
 ```
 
 ## 守ること
