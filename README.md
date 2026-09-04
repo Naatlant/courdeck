@@ -30,7 +30,7 @@ file you can open in a browser.
 | **Japanese synopses** | The upstream synopsis is English only, so the app pulls the lead section of the Japanese Wikipedia article and falls back to English when no article matches |
 | **Preview panel** | An enlarged panel with the banner art, score, streaming services and next episode. Opens on hover with a mouse, on focus while tabbing, and from a button on the card on touch devices. `Escape` closes it |
 | Details | Air period, next episode, studio, source material, trailer, official and streaming links |
-| Favorites | Stored in localStorage, with **export and import as a JSON file** so a cleared browser does not lose them and a phone and a desktop can share the same list. The weekly schedule can be filtered down to favorites only |
+| Favorites | Stored in localStorage, with **export and import as a JSON file** so a cleared browser does not lose them and a phone and a desktop can share the same list. The weekly schedule can be filtered down to favorites only, and the next episode of each favorite can be exported as an **iCalendar (`.ics`)** file for your own calendar app |
 | **Shareable URLs** | Filters and the active tab live in the query string, so any view can be bookmarked, shared, and navigated with the browser's back button |
 | Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
 | Keyboard support | Tab through cards to open the preview panel and press Enter / Space for the full details, `Escape` steps back out, `/` focuses the search box, and focus stays inside the dialog |
