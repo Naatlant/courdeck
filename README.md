@@ -8,6 +8,8 @@ trackers — **where each title is actually streaming in Japan**.
 
 **→ https://naatlant.github.io/courdeck/**
 
+![Courdeck in action: a hover preview opens on the seasonal list, the view switches to the weekly broadcast schedule, moves to the following week, and the interface is toggled from Japanese to English](assets/demo.gif)
+
 No build step, no framework, no API key required for visitors. The app itself is one HTML
 file you can open in a browser.
 
@@ -36,6 +38,22 @@ file you can open in a browser.
 | **English / Japanese** | Switch languages at any time. Titles, genres, formats and dates all follow the choice, and the setting is remembered and carried in the URL |
 
 Responsive down to phone width, and follows the OS light/dark preference.
+
+### Screenshots
+
+**Seasonal list** — this season in popularity order. The badges under each card are the part
+you won't find elsewhere: where the title is actually streaming in Japan.
+
+![Courdeck list view: cards for Summer 2026 anime showing cover art, scores, status and genre tags, with Japanese streaming badges such as dAnime (Amazon) and Prime Video](assets/screenshot-list-en.jpg)
+
+**Weekly schedule** — a broadcast day starts at 5 a.m., so a 1:30 a.m. show is filed under the
+previous day and written 25:30, the way Japanese schedules do it.
+
+![Courdeck weekly schedule: seven day columns starting from Friday, each listing broadcasts by time, with late-night slots shown as 24:00, 25:30 and 26:38](assets/screenshot-schedule-en.jpg)
+
+**Hover preview** — banner art, score, streaming services and the next episode, without leaving the list.
+
+![Courdeck hover preview: an enlarged panel floating over the list with banner art, score, genre tags, streaming badges and the next episode date and time](assets/screenshot-preview-en.jpg)
 
 ## Tech stack
 
@@ -91,7 +109,7 @@ scripts/fetch-streaming.mjs       fetch script
 scripts/serve.mjs                 local static server for previewing
 CLAUDE.md                         conventions and upstream constraints for contributors
 .github/workflows/streaming.yml   daily / weekly update workflow
-assets/                           TMDB logo, social card
+assets/                           TMDB logo, social card, README screenshots and demo GIF
 ```
 
 ## Usage
@@ -206,6 +224,7 @@ repository**.
 | `index.html`, `anime.html`, `scripts/`, `.github/` | MIT |
 | `data/streaming.json` | **Not MIT.** Belongs to TMDB / JustWatch |
 | `assets/tmdb.svg` | **Not MIT.** TMDB trademark, bundled for the attribution their terms require |
+| `assets/demo.gif` / `assets/screenshot-*.jpg` | **Not MIT.** Screenshots of the running app; the cover and banner art they contain belongs to the respective rights holders |
 
 The streaming data is governed by the
 [TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use), which do not permit
