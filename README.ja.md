@@ -275,7 +275,7 @@ node scripts/fetch-streaming.mjs --all  # 全作品（全置換）
 | 対象 | ライセンス |
 | --- | --- |
 | `index.html` / `anime.html` / `sw.js` / `manifest.webmanifest` / `scripts/` / `test/` / `.github/` / `data/synopses-overrides.json` | MIT |
-| `assets/icon-*.png` / `assets/og.png` | MIT。このリポジトリで作った図版（ロゴと文字だけ） |
+| `assets/icon-*.png` / `assets/apple-touch-icon.png` / `assets/og.png` | MIT。このリポジトリで作った図版（ロゴと文字だけ） |
 | `data/streaming.json` | **MIT対象外**。TMDB / JustWatch に帰属 |
 | `assets/tmdb.svg` | **MIT対象外**。TMDBの商標（帰属表示のために同梱） |
 | `assets/demo.gif` / `assets/screenshot-*.jpg` | **MIT対象外**。動作中の画面を撮影したもので、写り込んでいる表紙・バナー画像の権利は各権利者に帰属 |

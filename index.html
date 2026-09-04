@@ -18,6 +18,13 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#15181c">
 <link rel="manifest" href="manifest.webmanifest">
+<!-- iOS Safari はマニフェストのアイコンと名前を見ないので、専用の指定が要る。
+     これが無いと、ホーム画面のアイコンがページの縮小画像になり、
+     名前は <title> がそのまま使われて途中で切れる。 -->
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Courdeck">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --border:#dfe3e8; --text:#1c2024;
