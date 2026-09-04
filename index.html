@@ -17,6 +17,7 @@
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#15181c">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
   :root{
     --bg:#f6f7f9; --panel:#ffffff; --border:#dfe3e8; --text:#1c2024;
@@ -182,6 +183,8 @@
   .notice{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;
     background:var(--panel);border:1px solid var(--warn);color:var(--warn);
     border-radius:8px;padding:8px 12px;margin-bottom:12px}
+  /* 更新のお知らせは警告ではないので色を分ける */
+  .notice.info{border-color:var(--accent);color:var(--accent)}
   .notice button{padding:3px 10px;font-size:12px}
   .msg{padding:24px 8px;text-align:center;color:var(--muted);font-size:13px}
   .msg.err{color:var(--danger)}
@@ -309,6 +312,7 @@
     </div>
   </div>
 
+  <div class="notice info" id="swNotice" hidden></div>
   <div class="notice" id="notice" hidden></div>
 
   <div class="tabs">
@@ -494,6 +498,7 @@ var I18N = {
     srcAni: "出典: AniList（英語）", showEn: "英語の原文", showJa: "日本語の概要",
     wikiSearching: "日本語の概要を検索中…", epNo: "第{n}話", nextEp: "次回 第{n}話",
     openDetail: "{n} の詳細を開く", home: "最初の画面に戻る",
+    swUpdate: "新しいバージョンがあります。", swReload: "再読み込み",
     pvOpen: "{n} のプレビューを開く",
     "cal.prev": "前の週", "cal.this": "今週", "cal.next": "次の週",
     searchTip: "/ キーでここにフォーカス", dash: "—"
@@ -564,6 +569,7 @@ var I18N = {
     srcAni: "Source: AniList (English)", showEn: "English original", showJa: "Japanese summary",
     wikiSearching: "Looking for a Japanese summary…", epNo: "Ep. {n}", nextEp: "Next: ep. {n}",
     openDetail: "Open details for {n}", home: "Back to the start",
+    swUpdate: "A new version is available.", swReload: "Reload",
     pvOpen: "Show a preview of {n}",
     "cal.prev": "Previous week", "cal.this": "This week", "cal.next": "Next week",
     searchTip: "Press / to focus", dash: "—"
@@ -1938,6 +1944,49 @@ syncForm();
 renderFavCount();
 reset();
 if (initView !== "list") setView(initView);
+
+/* ---------- ホーム画面から起動できるようにする（任意の拡張） ----------
+   file:// や Service Worker 非対応の環境では登録しないだけで、本体は従来どおり動く。
+   isSecureContext を見るのは、https と localhost の両方を通すため。
+
+   新しい版を勝手に有効化しない。閲覧中の画面が差し替わるのを避けるためで、
+   代わりに待機させて「再読み込み」を出す。ここを作らずに Service Worker を入れると、
+   利用者が古い版を掴んだまま更新が永久に届かなくなる。 */
+function showSwUpdate(reg){
+  var n = el("swNotice");
+  n.innerHTML = "<span>" + esc(t("swUpdate")) + '</span><button id="swReload">' +
+    esc(t("swReload")) + "</button>";
+  n.hidden = false;
+  el("swReload").onclick = function(){
+    if (reg.waiting) reg.waiting.postMessage("skip-waiting");
+  };
+}
+/* file:// でも isSecureContext は true になるが Service Worker は使えない。
+   プロトコルを明示的に見て、無駄な登録を試みないようにする */
+if ("serviceWorker" in navigator && window.isSecureContext && /^https?:$/.test(location.protocol)){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      function watch(w){
+        if (!w) return;
+        w.addEventListener("statechange", function(){
+          /* controller があるときだけ「更新」。初回の導入では出さない */
+          if (w.state === "installed" && navigator.serviceWorker.controller) showSwUpdate(reg);
+        });
+      }
+      if (reg.waiting && navigator.serviceWorker.controller) showSwUpdate(reg);
+      watch(reg.installing);
+      reg.addEventListener("updatefound", function(){ watch(reg.installing); });
+    }).catch(function(){ /* 登録できなくても本体は動く */ });
+
+    /* 交代が済んだら1度だけ読み直す */
+    var swReloading = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function(){
+      if (swReloading) return;
+      swReloading = true;
+      location.reload();
+    });
+  });
+}
 </script>
 </body>
 </html>

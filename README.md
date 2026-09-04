@@ -35,6 +35,7 @@ file you can open in a browser.
 | Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
 | Keyboard support | Tab through cards to open the preview panel and press Enter / Space for the full details, `Escape` steps back out, `/` focuses the search box, and focus stays inside the dialog |
 | Offline tolerance | Falls back to the most recent cached response and tells you how old it is |
+| **Installable** | Add it to a phone's home screen and it launches standalone. The app shell and the streaming data are cached, so the last thing you looked at still opens in airplane mode. When a new version ships you get a reload prompt rather than a silent swap |
 | **English / Japanese** | Switch languages at any time. Titles, genres, formats and dates all follow the choice, and the setting is remembered and carried in the URL |
 
 Responsive down to phone width, and follows the OS light/dark preference.
@@ -129,7 +130,9 @@ test/date-logic.test.mjs          node:test suite covering the date handling
 CLAUDE.md                         conventions and upstream constraints for contributors
 .github/workflows/streaming.yml   daily / weekly update workflow
 .github/workflows/test.yml        runs the tests on push and pull requests
-assets/                           TMDB logo, social card, README screenshots and demo GIF
+manifest.webmanifest              home-screen install (optional; index.html works without it)
+sw.js                             service worker for offline use (optional)
+assets/                           TMDB logo, social card, icons, README screenshots and demo GIF
 ```
 
 ## Usage
