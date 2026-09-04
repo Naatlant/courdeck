@@ -623,6 +623,13 @@ var SOURCES = {ORIGINAL:"オリジナル",MANGA:"漫画",LIGHT_NOVEL:"ライト�
   VIDEO_GAME:"ゲーム",NOVEL:"小説",OTHER:"その他",DOUJINSHI:"同人",ANIME:"アニメ",WEB_NOVEL:"Web小説",
   LIVE_ACTION:"実写",GAME:"ゲーム",COMIC:"コミック",MULTIMEDIA_PROJECT:"メディアミックス",PICTURE_BOOK:"絵本"};
 
+/* ── 日付ロジック ───────────────────────────────────────────────
+   放送日の5時始まり、24時間超え表記、シーズン判定はこのアプリの中核だが、
+   境界条件を間違えても画面上はそれらしく表示されるため気づきにくい。
+   テストできるよう、DOMもグローバル状態も参照しない範囲としてここにまとめる。
+   現在時刻に依存する関数は基準時刻を引数で受け取る（内部で new Date() を呼ばない）。
+   区切りコメントはテストがこの範囲を切り出す目印なので消さないこと。 */
+/* date-logic:start */
 function seasonOf(d){
   return ["WINTER","WINTER","WINTER","SPRING","SPRING","SPRING",
           "SUMMER","SUMMER","SUMMER","FALL","FALL","FALL"][d.getMonth()];
@@ -634,8 +641,41 @@ function shiftSeason(year, season, dir){
   if (i > 3) { i = 0; year++; }
   return {year: year, season: o[i]};
 }
+/* 基準時刻が属する放送シーズン */
+function currentSeason(now){
+  return {year: now.getFullYear(), season: seasonOf(now)};
+}
+/* 放送日は「朝5時始まり」で数える（深夜アニメの慣習に合わせる）。
+   基準時刻が属する放送日の5:00を返す。引数は書き換えない */
+function broadcastToday(now){
+  var s = new Date(now.getTime());
+  if (s.getHours() < 5) s.setDate(s.getDate() - 1);
+  s.setHours(5, 0, 0, 0);
+  return s;
+}
+/* offset 週分ずらした曜日表の表示開始日 */
+function calWeekStart(now, offset){
+  var s = broadcastToday(now);
+  s.setDate(s.getDate() + offset * 7);
+  return s;
+}
+function dayKey(d){ return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); }
+/* 深夜分は前日扱い。放送日そのものを返す */
+function broadcastDate(at){
+  var d = new Date(at * 1000);
+  if (d.getHours() < 5) d.setDate(d.getDate() - 1);
+  return d;
+}
+/* 深夜は24時制で表記する（25:30 = 翌1:30） */
+function airTime(at){
+  var d = new Date(at * 1000);
+  var h = d.getHours();
+  if (h < 5) h += 24;
+  return h + ":" + ("0" + d.getMinutes()).slice(-2);
+}
+/* date-logic:end */
 var NOW = new Date();
-var CUR = {year: NOW.getFullYear(), season: seasonOf(NOW)};
+var CUR = currentSeason(NOW);
 
 var state = {
   year: CUR.year, season: CUR.season, sort: "POPULARITY_DESC",
@@ -959,20 +999,8 @@ function weekName(i){ return lang === "ja" ? WEEK_JA[i] : WEEK_EN[i]; }
 var SHORT_FORMATS = ["TV_SHORT", "MUSIC", "SPECIAL", "OVA"];
 var cal = {rows: [], byId: {}, loading: false, loaded: false, err: "", offset: 0, pending: false};
 
-/* 放送日は「朝5時始まり」で数える（深夜アニメの慣習に合わせる） */
-function broadcastToday(){
-  var s = new Date();
-  if (s.getHours() < 5) s.setDate(s.getDate() - 1);
-  s.setHours(5, 0, 0, 0);
-  return s;
-}
-/* cal.offset 週分ずらした表示開始日 */
-function calStart(){
-  var s = broadcastToday();
-  s.setDate(s.getDate() + cal.offset * 7);
-  return s;
-}
-function dayKey(d){ return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); }
+/* cal.offset 週分ずらした表示開始日。計算そのものは上の日付ロジックにある */
+function calStart(){ return calWeekStart(new Date(), cal.offset); }
 
 function setCalNav(on){
   el("calPrev").disabled = !on;
@@ -1022,12 +1050,6 @@ function loadCalendar(force){
   });
 }
 
-/* 深夜分は前日扱い。放送日そのものを返す */
-function broadcastDate(at){
-  var d = new Date(at * 1000);
-  if (d.getHours() < 5) d.setDate(d.getDate() - 1);
-  return d;
-}
 function calFilter(r){
   var m = r.m;
   if (el("calFav").checked && !favs[m.id]) return false;
@@ -1040,13 +1062,6 @@ function calFilter(r){
   if (el("calNoShort").checked && SHORT_FORMATS.indexOf(m.format) >= 0) return false;
   return true;
 }
-function airTime(at){
-  var d = new Date(at * 1000);
-  var h = d.getHours();
-  if (h < 5) h += 24;                      /* 深夜は24時制（25:30 = 翌1:30） */
-  return h + ":" + ("0" + d.getMinutes()).slice(-2);
-}
-
 function renderCalendar(){
   hidePreview();
   var box = el("cal");
@@ -1078,7 +1093,7 @@ function renderCalendar(){
     shown++;
   });
 
-  var todayKey = dayKey(broadcastToday());   /* 週を送っても今日の位置は動かさない */
+  var todayKey = dayKey(broadcastToday(new Date()));   /* 週を送っても今日の位置は動かさない */
   box.innerHTML = days.map(function(o){
     var slots = o.rows.map(function(r){
       var m = r.m;
