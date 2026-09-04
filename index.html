@@ -125,6 +125,13 @@
     background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
     color:rgba(255,255,255,.7);transition:color .15s ease,transform .15s ease}
   .card .fav:hover{color:#ffcf4d;border:none;transform:scale(1.14)}
+  /* タッチ環境にはホバーが無いので、プレビューはこのボタンから開く。
+     マウス環境では出さない（従来どおりホバーで開く） */
+  .card .pvbtn{display:none;position:absolute;right:7px;bottom:7px;z-index:1;
+    width:26px;height:26px;padding:0;place-items:center;border:none;border-radius:50%;
+    background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    color:rgba(255,255,255,.85)}
+  @media (hover: none), (pointer: coarse){ .card .pvbtn{display:grid} }
   .card .fav.on{color:#ffcf4d}
   .card .body{padding:8px 10px 10px;display:flex;flex-direction:column;gap:4px;flex:1}
   /* 1行の題名でも2行分を確保し、下の要素の位置をカード間で揃える */
@@ -188,7 +195,11 @@
     font-variant-numeric:tabular-nums}
   .preview .pv-next{font-size:11px;color:var(--accent);margin-top:7px}
   .preview .pv-fv{color:#e0a800}
-  @media (hover: none), (max-width:700px){ .preview{display:none} }
+  /* 画面の高さを超えないようにする。狭い画面でも下がはみ出さない */
+  .preview{max-height:calc(100vh - 16px)}
+  /* ボタンから開いたときだけ操作できる。ホバー時は下のカードの mouseout を邪魔しない */
+  .preview.pinned{pointer-events:auto;overflow:auto}
+  @media (prefers-reduced-motion: reduce){ .preview{transition:none} }
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:50;
     padding:24px;overflow:auto}
   .modal.open{display:block}
@@ -450,6 +461,7 @@ var I18N = {
     srcAni: "出典: AniList（英語）", showEn: "英語の原文", showJa: "日本語の概要",
     wikiSearching: "日本語の概要を検索中…", epNo: "第{n}話", nextEp: "次回 第{n}話",
     openDetail: "{n} の詳細を開く", home: "最初の画面に戻る",
+    pvOpen: "{n} のプレビューを開く",
     "cal.prev": "前の週", "cal.this": "今週", "cal.next": "次の週",
     searchTip: "/ キーでここにフォーカス", dash: "—"
   },
@@ -502,6 +514,7 @@ var I18N = {
     srcAni: "Source: AniList (English)", showEn: "English original", showJa: "Japanese summary",
     wikiSearching: "Looking for a Japanese summary…", epNo: "Ep. {n}", nextEp: "Next: ep. {n}",
     openDetail: "Open details for {n}", home: "Back to the start",
+    pvOpen: "Show a preview of {n}",
     "cal.prev": "Previous week", "cal.this": "This week", "cal.next": "Next week",
     searchTip: "Press / to focus", dash: "—"
   }
@@ -874,7 +887,9 @@ function renderGrid(){
     return '<article class="card" data-id="' + m.id + '" tabindex="0" role="button"' +
       ' aria-label="' + esc(t("openDetail", {n: title(m)})) + '">' +
       '<div class="thumb"' + (bg ? ' style="background:' + bg + '"' : "") + ">" + img + sc +
-      '<button class="fav' + on + '" data-fav="' + m.id + '" title="' + t("tab.fav") + '">★</button></div>' +
+      '<button class="fav' + on + '" data-fav="' + m.id + '" title="' + t("tab.fav") + '">★</button>' +
+      '<button class="pvbtn" data-preview="' + m.id + '" aria-label="' +
+        esc(t("pvOpen", {n: title(m)})) + '">' + PV_ICON + "</button></div>" +
       '<div class="body"><div class="ttl">' + esc(title(m)) + "</div>" +
       '<div class="sub">' + esc(subtitle(m)) + "</div>" +
       "<div>" + statusTag(m) + gen + "</div>" + svcTags(m.id, 2) + "</div></article>";
@@ -1210,10 +1225,26 @@ function ymd(d){
   if (!d || !d.year) return t("dash");
   return d.year + "/" + (d.month || "?") + "/" + (d.day || "?");
 }
-/* ---------- ホバープレビュー ---------- */
+/* ---------- プレビュー（ホバー / フォーカス / タッチ） ---------- */
 var HOVER_DELAY = 380;
 var hoverOn = !window.matchMedia || window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 var pvEl = null, pvTimer = null, pvTarget = null;
+
+var PV_ICON = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">' +
+  '<path fill="currentColor" d="M8 3C4.6 3 1.8 5.3 1 8c.8 2.7 3.6 5 7 5s6.2-2.3 7-5c-.8-2.7-3.6-5-7-5z' +
+  'm0 8.3A3.3 3.3 0 1 1 8 4.7a3.3 3.3 0 0 1 0 6.6zm0-1.8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>';
+
+/* 直前の操作がキーボードだったか。マウスでカードを押してもフォーカスは当たるので、
+   フォーカスでプレビューを開くのはキー操作のときだけに限る */
+var keyNav = false;
+document.addEventListener("keydown", function(e){
+  if (e.key === "Tab" || (e.key && e.key.indexOf("Arrow") === 0)) keyNav = true;
+}, true);
+document.addEventListener("pointerdown", function(e){
+  keyNav = false;
+  /* ボタンから開いたプレビューは、外側に触れたら閉じる */
+  if (pvEl && pvEl.classList.contains("pinned") && !pvEl.contains(e.target)) hidePreview();
+}, true);
 
 function previewHtml(m){
   var img = m.bannerImage || (m.coverImage && m.coverImage.large) || "";
@@ -1235,15 +1266,18 @@ function previewHtml(m){
     '<div class="pv-meta">' + esc(subtitle(m)) + "</div>" +
     "<div>" + sc + statusTag(m) + gen + "</div>" + svcTags(m.id, 5) + next + "</div>";
 }
-function showPreview(anchor, m){
+function showPreview(anchor, m, pinned){
   if (!pvEl){
     pvEl = document.createElement("div");
     pvEl.className = "preview";
     document.body.appendChild(pvEl);
   }
   pvEl.innerHTML = previewHtml(m);
+  pvEl.classList.toggle("pinned", !!pinned);  /* 高さを測る前に確定させる */
   var r = anchor.getBoundingClientRect();
-  var w = Math.min(Math.max(r.width * 1.5, 300), 380);
+  /* 狭い画面では画面幅に収める。左右に8pxずつ余白を残す */
+  var maxW = Math.min(380, window.innerWidth - 16);
+  var w = Math.min(Math.max(r.width * 1.5, 300), maxW);
   pvEl.style.width = w + "px";
   var h = pvEl.offsetHeight;                 /* 表示前に高さを確定させる */
   var left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
@@ -1255,10 +1289,32 @@ function showPreview(anchor, m){
 function hidePreview(){
   clearTimeout(pvTimer);
   pvTarget = null;
-  if (pvEl) pvEl.classList.remove("show");
+  /* pinned を残すと、消えたあとも透明なまま操作を横取りしてしまう */
+  if (pvEl) pvEl.classList.remove("show", "pinned");
+}
+/* ホバーの遅延を挟まずに開く。キーボードとタッチはどちらも意図的な操作なので待たせない */
+function openPreviewFor(node, pinned){
+  if (!node) return;
+  var m = findMedia(Number(node.dataset.id));
+  if (!m) return;
+  clearTimeout(pvTimer);
+  pvTarget = node;
+  showPreview(node, m, pinned);
 }
 function bindPreview(rootId, selector){
   var root = el(rootId);
+  /* キーボードで辿ったときは、ホバーと同じパネルをフォーカスで開く */
+  root.addEventListener("focusin", function(e){
+    var node = e.target.closest(selector);
+    if (!node || !keyNav) return;
+    openPreviewFor(node, false);
+  });
+  root.addEventListener("focusout", function(e){
+    var node = e.target.closest(selector);
+    if (!node) return;
+    if (e.relatedTarget && node.contains(e.relatedTarget)) return;
+    hidePreview();
+  });
   root.addEventListener("mouseover", function(e){
     if (!hoverOn) return;
     var node = e.target.closest(selector);
@@ -1581,6 +1637,8 @@ el("cal").addEventListener("keydown", function(e){ activateKey(e, ".slot"); });
 el("grid").addEventListener("click", function(e){
   var fav = e.target.closest("[data-fav]");
   if (fav){ e.stopPropagation(); toggleFav(Number(fav.dataset.fav)); return; }
+  var pv = e.target.closest("[data-preview]");
+  if (pv){ e.stopPropagation(); openPreviewFor(pv.closest(".card"), true); return; }
   var card = e.target.closest(".card");
   if (card){ lastTrigger = card; openDetail(Number(card.dataset.id)); }
 });
@@ -1588,6 +1646,7 @@ el("modal").addEventListener("click", function(e){ if (e.target.id === "modal") 
 document.addEventListener("keydown", function(e){
   if (e.key === "Escape"){
     if (el("modal").classList.contains("open")) closeDetail();
+    else if (pvEl && pvEl.classList.contains("show")) hidePreview();
     else if (document.activeElement === el("q")) el("q").blur();
     return;
   }

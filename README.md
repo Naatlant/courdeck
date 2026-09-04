@@ -26,12 +26,12 @@ file you can open in a browser.
 | Weekly schedule | Seven days of broadcasts by day of week, **with navigation to other weeks**. Days start at 5 a.m. and late-night slots use the Japanese 24-hour convention (25:30 = 1:30 the next morning) |
 | **Streaming in Japan** | dAnime, Prime Video, U-NEXT, Netflix, Hulu and others, for 6,152 titles |
 | **Japanese synopses** | The upstream synopsis is English only, so the app pulls the lead section of the Japanese Wikipedia article and falls back to English when no article matches |
-| **Hover preview** | Hovering a card opens an enlarged panel with the banner art, score, streaming services and next episode |
+| **Preview panel** | An enlarged panel with the banner art, score, streaming services and next episode. Opens on hover with a mouse, on focus while tabbing, and from a button on the card on touch devices. `Escape` closes it |
 | Details | Air period, next episode, studio, source material, trailer, official and streaming links |
 | Favorites | Stored in localStorage. The weekly schedule can be filtered down to favorites only |
 | **Shareable URLs** | Filters and the active tab live in the query string, so any view can be bookmarked, shared, and navigated with the browser's back button |
 | Infinite scroll | Loads the next page as you scroll, pausing after 10 consecutive pages |
-| Keyboard support | Tab through cards and open them with Enter / Space, `/` focuses the search box, and focus stays inside the dialog |
+| Keyboard support | Tab through cards to open the preview panel and press Enter / Space for the full details, `Escape` steps back out, `/` focuses the search box, and focus stays inside the dialog |
 | Offline tolerance | Falls back to the most recent cached response and tells you how old it is |
 | **English / Japanese** | Switch languages at any time. Titles, genres, formats and dates all follow the choice, and the setting is remembered and carried in the URL |
 
