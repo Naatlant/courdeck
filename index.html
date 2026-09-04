@@ -91,20 +91,35 @@
   .bar i{display:block;height:6px;border-radius:3px;background:var(--accent);opacity:.75}
   .bar b{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
   .bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;
-    box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer}
-  .card:hover{border-color:var(--accent)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer;
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+  .card:hover{border-color:var(--accent);transform:translateY(-4px);
+    box-shadow:0 12px 26px rgba(0,0,0,.30)}
+  @media (prefers-reduced-motion: reduce){
+    .card{transition:none} .card:hover{transform:none}
+  }
   .card .thumb{position:relative;aspect-ratio:2/3;background:var(--row)}
+  /* 明るい絵柄でもスコアと★が読めるように上部だけ暗く落とす */
+  .card .thumb::after{content:"";position:absolute;left:0;right:0;top:0;height:66px;
+    background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,0));pointer-events:none}
   .card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-  .card .score{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.72);color:#fff;
-    font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;font-variant-numeric:tabular-nums}
-  .card .fav{position:absolute;right:4px;top:4px;background:rgba(0,0,0,.55);border:none;color:#fff;
-    padding:3px 7px;border-radius:5px;font-size:13px;line-height:1}
-  .card .fav:hover{color:#ffcf4d;border:none}
+  .card .score{position:absolute;left:7px;top:7px;z-index:1;color:#fff;
+    background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.16);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:6px;
+    font-variant-numeric:tabular-nums;letter-spacing:.01em}
+  .card .score.high{color:#ffd76e}
+  .card .fav{position:absolute;right:7px;top:7px;z-index:1;width:26px;height:26px;padding:0;
+    display:grid;place-items:center;border:none;border-radius:50%;font-size:13px;line-height:1;
+    background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    color:rgba(255,255,255,.7);transition:color .15s ease,transform .15s ease}
+  .card .fav:hover{color:#ffcf4d;border:none;transform:scale(1.14)}
   .card .fav.on{color:#ffcf4d}
   .card .body{padding:8px 10px 10px;display:flex;flex-direction:column;gap:4px;flex:1}
-  .card .ttl{font-size:13px;font-weight:600;line-height:1.4;
+  /* 1行の題名でも2行分を確保し、下の要素の位置をカード間で揃える */
+  .card .ttl{font-size:13px;font-weight:600;line-height:1.4;min-height:2.8em;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .card .sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tag{display:inline-block;font-size:10px;padding:1px 6px;border-radius:4px;
@@ -115,7 +130,7 @@
   .svc{display:inline-block;font-size:9.5px;line-height:1.5;padding:0 5px;border-radius:3px;
     border:1px solid var(--border);color:var(--muted);margin:3px 3px 0 0;white-space:nowrap}
   .svc.more{border-style:dashed}
-  .card .svcs{margin-top:2px}
+  .card .svcs{margin-top:auto;padding-top:3px}
   .calbar{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
   .calbar label{display:flex;gap:5px;align-items:center;cursor:pointer;color:var(--text)}
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}
@@ -815,7 +830,10 @@ function renderGrid(){
     var on = favs[m.id] ? " on" : "";
     var img = m.coverImage && m.coverImage.large
       ? '<img loading="lazy" src="' + esc(m.coverImage.large) + '" alt="">' : "";
-    var sc = m.averageScore ? '<span class="score">' + (m.averageScore / 10).toFixed(1) + "</span>" : "";
+    var sc = m.averageScore
+      ? '<span class="score' + (m.averageScore >= 80 ? " high" : "") + '">' +
+        (m.averageScore / 10).toFixed(1) + "</span>"
+      : "";
     var gen = (m.genres || []).slice(0, 2).map(function(x){
       return '<span class="tag">' + esc(genreName(x)) + "</span>";
     }).join("");
